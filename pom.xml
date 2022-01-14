@@ -1,0 +1,77 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>edu.ucr.cs.bdlab.raptor</groupId>
+  <artifactId>raptor-backend</artifactId>
+  <version>0.1-SNAPSHOT</version>
+  <packaging>war</packaging>
+  <name>Raptor Backend App</name>
+
+  <properties>
+    <jettyVersion>9.3.24.v20180605</jettyVersion>
+
+    <!--https://stackoverflow.com/questions/53034953/error-source-option-5-is-no-longer-supported-use-6-or-later-on-maven-compile-->
+    <maven.compiler.source>1.8</maven.compiler.source>
+    <maven.compiler.target>1.8</maven.compiler.target>
+    <!-- <mongodb-driver-sync.version>3.11.0</mongodb-driver-sync.version> -->
+        <mongodb-driver-sync.version>4.3.2</mongodb-driver-sync.version>
+
+  </properties>
+
+  <dependencies>
+
+          <dependency>
+            <groupId>org.mongodb</groupId>
+            <artifactId>mongodb-driver-sync</artifactId>
+            <version>${mongodb-driver-sync.version}</version>
+        </dependency>
+
+  <!-- https://mvnrepository.com/artifact/edu.ucr.cs.bdlab/beast -->
+        <dependency>
+            <groupId>edu.ucr.cs.bdlab</groupId>
+            <artifactId>beast-spark</artifactId>
+            <version>0.9.3-RC1</version>
+        </dependency>
+
+<dependency>
+    <groupId>com.fasterxml.jackson.core</groupId>
+    <artifactId>jackson-databind</artifactId>
+    <version>2.10.0</version>
+</dependency>
+
+<dependency>
+    <groupId>org.locationtech.jts</groupId>
+    <artifactId>jts-core</artifactId>
+    <version>1.18.1</version>
+</dependency>
+
+    <dependency>
+      <groupId>javax.servlet</groupId>
+      <artifactId>javax.servlet-api</artifactId>
+      <version>3.1.0</version>
+      <scope>provided</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+  <plugin>
+        <groupId>org.eclipse.jetty</groupId>
+        <artifactId>jetty-maven-plugin</artifactId>
+        <version>${jettyVersion}</version>
+        <configuration>
+          <verbose>true</verbose>
+          <fork>true</fork>
+          <executable>/usr/bin/javac</executable>
+          <compilerVersion>1.8</compilerVersion>
+          <!--https://maven.apache.org/plugins/maven-compiler-plugin/examples/set-compiler-source-and-target.html-->
+          <source>1.8</source>
+          <target>1.8</target>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+</project>
