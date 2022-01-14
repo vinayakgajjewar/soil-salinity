@@ -31,6 +31,9 @@ var polygonStyle = new ol.style.Style({
   stroke: new ol.style.Stroke({
     color: "ff00ff",
     width: 1
+  }),
+  fill: new ol.style.Fill({
+    color: "rgba(255, 255, 0, 0.5)"
   })
 });
 
@@ -106,6 +109,9 @@ $(document).ready(function () {
 
   // add hover handler to render popup
   map.on("pointermove", function (evt) {
+    if (evt.dragging) {
+      return;
+    }
 
     var p = evt.pixel;
     var feature = map.forEachFeatureAtPixel(p, function(feature) {
@@ -138,19 +144,16 @@ $(document).ready(function () {
   // on singleclick, display current feature info at bottom of map
   map.on("singleclick", function (evt) {
     var p = evt.pixel;
-    console.log(evt.coordinate);
+    //console.log(evt.coordinate);
     var feature = map.forEachFeatureAtPixel(p, function(feature) {
       return feature;
     });
     if (feature) {
       // if we're clicking on a feature, display more info on the side
-      document.getElementById("acq_date").innerHTML = feature.get("acq_date");
-      document.getElementById("acq_time").innerHTML = feature.get("acq_time");
-      document.getElementById("frp").innerHTML = feature.get("frp");
-      document.getElementById("TEMP_ave").innerHTML = feature.get("TEMP_ave");
-      document.getElementById("TEMP_min").innerHTML = feature.get("TEMP_min");
-      document.getElementById("TEMP_max").innerHTML = feature.get("TEMP_max");
-      document.getElementById("WSPD_ave").innerHTML = feature.get("WSPD_ave");
+      document.getElementById("County").innerHTML = feature.get("County");
+      document.getElementById("Acres").innerHTML = feature.get("Acres");
+      document.getElementById("Crop2014").innerHTML = feature.get("Crop2014");
+      document.getElementById("Date_Data").innerHTML = feature.get("Date_Data");
     }
   });
 
