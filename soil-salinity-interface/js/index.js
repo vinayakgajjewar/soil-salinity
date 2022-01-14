@@ -37,7 +37,8 @@ var polygonStyle = new ol.style.Style({
 function makeDynamicGETRequest(map) {
 
   // base URL
-  var baseURL = "http://localhost:8080/raptor-backend-0.1-SNAPSHOT/vectors/states.geojson";
+  //var baseURL = "http://localhost:8080/raptor-backend-0.1-SNAPSHOT/vectors/states.geojson";
+  var baseURL = "http://localhost:8080/vectors/states.geojson";
 
   // extents
   minx = map.getView().calculateExtent()[0];
@@ -72,6 +73,7 @@ $(document).ready(function () {
       }),
 
       // multilevel visualization
+      /*
       new ol.layer.Tile({
         source: new ol.source.XYZ({
           url: "data/multilevel/wildfire_visualization_4326_reversed/tile-{z}-{x}-{y}.png",
@@ -80,15 +82,16 @@ $(document).ready(function () {
         }),
         maxZoom: 12
       }),
+      */
 
       // empty vector layer
       new ol.layer.Vector({
-        minZoom: 12,
+        //minZoom: 12,
         source: new ol.source.Vector({
           format: new ol.format.GeoJSON({featureProjection: "EPSG:3857"})
         }),
         style: function(feature) {
-          return style;
+          return polygonStyle;
         }
       })
     ],
@@ -154,8 +157,9 @@ $(document).ready(function () {
   // make dynamic GET request at end of map move event
   // only want to make request if zoom level is high enough
   map.on("moveend", function() {
-    if (map.getView().getZoom() >= 12) {
+    /*if (map.getView().getZoom() >= 12) {
       makeDynamicGETRequest(map);
-    }
+    }*/
+    makeDynamicGETRequest(map);
   });
 });
