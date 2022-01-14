@@ -105,7 +105,6 @@ $(document).ready(function () {
   //makeDynamicGETRequest(map);
 
   // add hover handler to render popup
-  /*
   map.on("pointermove", function (evt) {
 
     var p = evt.pixel;
@@ -116,13 +115,13 @@ $(document).ready(function () {
 
       // if we're hovering over a feature, display feature information
       let popupContent = `
-        acq_date: ${feature.get("acq_date")}
+        County: ${feature.get("County")}
         <br>
-        frp: ${feature.get("frp")}
+        Acres: ${feature.get("Acres")}
         <br>
-        TEMP_ave: ${feature.get("TEMP_ave")}
+        Crop2014: ${feature.get("Crop2014")}
         <br>
-        WSPD_ave: ${feature.get("WSPD_ave")}
+        Date_Data_: ${feature.get("Date_Data_")}
       `;
       content.innerHTML = popupContent;
 
@@ -135,7 +134,6 @@ $(document).ready(function () {
       //closer.blur();
     }
   });
-  */
 
   // on singleclick, display current feature info at bottom of map
   map.on("singleclick", function (evt) {
