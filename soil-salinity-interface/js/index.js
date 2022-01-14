@@ -105,6 +105,7 @@ $(document).ready(function () {
   //makeDynamicGETRequest(map);
 
   // add hover handler to render popup
+  /*
   map.on("pointermove", function (evt) {
 
     var p = evt.pixel;
@@ -134,6 +135,7 @@ $(document).ready(function () {
       //closer.blur();
     }
   });
+  */
 
   // on singleclick, display current feature info at bottom of map
   map.on("singleclick", function (evt) {
