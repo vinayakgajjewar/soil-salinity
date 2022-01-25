@@ -91,7 +91,7 @@ $(document).ready(function () {
       new ol.layer.Vector({
         //minZoom: 12,
         source: new ol.source.Vector({
-          format: new ol.format.GeoJSON({featureProjection: "EPSG:3857"})
+          format: new ol.format.GeoJSON({featureProjection: "EPSG:4326"})
         }),
         style: function(feature) {
           return polygonStyle;
