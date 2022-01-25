@@ -32,7 +32,7 @@
         <dependency>
             <groupId>edu.ucr.cs.bdlab</groupId>
             <artifactId>beast-spark</artifactId>
-            <version>0.9.3-RC1</version>
+            <version>0.9.4-RC2</version>
         </dependency>
 
 <dependency>
