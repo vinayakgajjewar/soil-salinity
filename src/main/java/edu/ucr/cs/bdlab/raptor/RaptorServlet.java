@@ -151,7 +151,7 @@ public class RaptorServlet extends HttpServlet {
         System.out.println("----done reading records");
 
         // run raptor join operation
-        JavaRDD<RaptorJoinFeature<Float>> join = JavaSpatialRDDHelper.raptorJoin(records, raster, new BeastOptions());
+        JavaRDD<RaptorJoinFeature<Float>> join = JavaSpatialRDDHelper.raptorJoin(jssc.parallelize(filteredRecords), raster, new BeastOptions());
 
         // aggregate results
         JavaPairRDD<String, Float> aggResults = join.mapToPair(v -> new Tuple2<>(v.feature(), v.m()))
