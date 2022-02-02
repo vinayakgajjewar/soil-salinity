@@ -7,6 +7,7 @@ import java.io.IOException;
 // import java.util.*; // maps
 import java.util.List; // lists
 import java.util.ArrayList;
+import java.util.Map;
 
 // for some reason, including this import causes the servlet to break :(
 //import java.nio.file.Paths; // paths
@@ -22,11 +23,13 @@ import edu.ucr.cs.bdlab.beast.JavaSpatialSparkContext;
 import edu.ucr.cs.bdlab.beast.common.BeastOptions;
 import edu.ucr.cs.bdlab.beast.geolite.IFeature;
 import edu.ucr.cs.bdlab.beast.geolite.ITile;
-import edu.ucr.cs.bdlab.raptor.Statistics;
 import edu.ucr.cs.bdlab.beast.JavaSpatialRDDHelper;
+import edu.ucr.cs.bdlab.raptor.Statistics;
 import edu.ucr.cs.bdlab.raptor.HDF4Reader;
 import edu.ucr.cs.bdlab.raptor.RaptorMixin;
-import edu.ucr.cs.bdlab.beast.JavaSpatialRDDHelper;
+import edu.ucr.cs.bdlab.raptor.RaptorJoinResult;
+import edu.ucr.cs.bdlab.raptor.RaptorJoinFeature;
+
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -128,6 +131,9 @@ public class RaptorServlet extends HttpServlet {
         // use rtree (fast)
         //JavaRDD<IFeature> records = jssc.spatialFile("data/rtree/wildfire_index/wildfire_index/", "rtree");
 
+        // load raster data
+        JavaRDD<ITile> raster = jssc.geoTiff("data/tif/0_5_compressed/ph.tif", 0, new BeastOptions());
+
         JavaRDD<IFeature> records = jssc.shapefile("data/shapefile/CA_farmland.zip");
         
         // filter by map extents
@@ -142,12 +148,29 @@ public class RaptorServlet extends HttpServlet {
         //RaptorMixin.RasterReadMixinFunctions rrmf = new RaptorMixin.RasterReadMixinFunctions(JavaSparkContext.toSparkContext(sparkconnector.getSC()));
         //RDD<ITile> raster = rrmf.geoTiff("data/geotiff/0_5_compressed/ph.tif", 0, new BeastOptions());
 
-        //JavaRDD<ITile> rasterRecords = jssc.geoTiff("data/geotiff/0_5_compressed/ph.tif", 0, new BeastOptions());
-
-        //List<IFeature> records = SpatialReader.readInput(sparkconnector.getSC(), new BeastOptions(), "data/geojson/TIGER2018_STATE_data_index.geojson", "geojson").collect();
-        //JavaRDD<IFeature> records = SpatialReader.readInput(sc, new BeastOptions(), "exampleinput.geojson", "geojson");
-
         System.out.println("----done reading records");
+
+        // run raptor join operation
+        JavaRDD<RaptorJoinFeature<Float>> join = JavaSpatialRDDHelper.raptorJoin(records, raster, new BeastOptions());
+
+        // aggregate results
+        JavaPairRDD<String, Float> aggResults = join.mapToPair(v -> new Tuple2<>(v.feature(), v.m()))
+            .reduceByKey(Float::sum)
+            .mapToPair(fv -> {
+                String name = fv._1().getAs("County");
+                float val = fv._2();
+                return new Tuple2<>(name, val);
+            });
+
+        System.out.println(aggResults.first());
+        
+        /*
+        
+        // write output
+        System.out.println("Something\tSomething else\n");
+        for (Map.Entry<String, Float> result : aggResults.collectAsMap().entrySet()) {
+            System.out.printf("%s\t%r\n", result.getKey(), result.getValue());
+        }*/
 
         // try writing out a record
         try (GeoJSONFeatureWriter writer = new GeoJSONFeatureWriter()) {
