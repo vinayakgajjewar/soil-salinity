@@ -75,7 +75,6 @@ public class RaptorServlet extends HttpServlet {
 
         // get or create spark context
         sparkconnector = SparkConnector.getInstance();
-
         jssc = new JavaSpatialSparkContext(sparkconnector.getSC());
     }
 
@@ -121,16 +120,6 @@ public class RaptorServlet extends HttpServlet {
         // because of CORS policy
         response.addHeader("Access-Control-Allow-Origin", "*");
 
-        // read an example geojson file into a list
-
-
-        // use csv (slow)
-        //JavaRDD<IFeature> records = jssc.readCSVPoint("data/csv/test_wildfire_visualization_4326.csv", "x", "y", '\t', true);
-        //JavaRDD<IFeature> records = jssc.readCSVPoint("data/csv/wildfire_visualization_4326_reversed.csv", "x", "y", '\t', true);
-
-        // use rtree (fast)
-        //JavaRDD<IFeature> records = jssc.spatialFile("data/rtree/wildfire_index/wildfire_index/", "rtree");
-
         // load raster data
         JavaRDD<ITile> raster = jssc.geoTiff("data/tif/0_5_compressed/ph.tif", 0, new BeastOptions());
 
@@ -142,35 +131,39 @@ public class RaptorServlet extends HttpServlet {
         // take 1000 records maximum
         List<IFeature> filteredRecords = JavaSpatialRDDHelper.rangeQuery(records, extents).take(1000);
 
-        // read geotiff data
-        //RaptorMixin.RasterReadMixinFunctions rrmf = RaptorMixin.RasterReadMixinFunctions(JavaSparkContext.toSparkContext(sparkconnector.getSC()));
-        //RDD<ITile> raster = rrmf.geoTiff("data/geotiff/0_5_compressed/ph.tif", 0, new BeastOptions());
-        //RaptorMixin.RasterReadMixinFunctions rrmf = new RaptorMixin.RasterReadMixinFunctions(JavaSparkContext.toSparkContext(sparkconnector.getSC()));
-        //RDD<ITile> raster = rrmf.geoTiff("data/geotiff/0_5_compressed/ph.tif", 0, new BeastOptions());
-
         System.out.println("----done reading records");
 
         // run raptor join operation
         JavaRDD<RaptorJoinFeature<Float>> join = JavaSpatialRDDHelper.raptorJoin(jssc.parallelize(filteredRecords), raster, new BeastOptions());
 
-        // aggregate results
-        JavaPairRDD<String, Float> aggResults = join.mapToPair(v -> new Tuple2<>(v.feature(), v.m()))
-            .reduceByKey(Float::sum)
+        // aggregate min results
+        JavaPairRDD<String, Float> aggMinResults = join.mapToPair(v -> new Tuple2<>(v.feature(), v.m()))
+            .reduceByKey(Float::min)
             .mapToPair(fv -> {
                 String name = fv._1().getAs("County");
                 float val = fv._2();
                 return new Tuple2<>(name, val);
             });
 
-        System.out.println(aggResults.first());
-        
-        /*
+        // aggregate max results
+        JavaPairRDD<String, Float> aggMaxResults = join.mapToPair(v -> new Tuple2<>(v.feature(), v.m()))
+                .reduceByKey(Float::max)
+                .mapToPair(fv -> {
+                    String name = fv._1().getAs("County");
+                    float val = fv._2();
+                    return new Tuple2<>(name, val);
+                });
         
         // write output
-        System.out.println("Something\tSomething else\n");
-        for (Map.Entry<String, Float> result : aggResults.collectAsMap().entrySet()) {
-            System.out.printf("%s\t%r\n", result.getKey(), result.getValue());
-        }*/
+        System.out.println("County\tMin pH\n");
+        for (Map.Entry<String, Float> result : aggMinResults.collectAsMap().entrySet()) {
+            System.out.printf("%s\t%f\n", result.getKey(), result.getValue());
+        }
+
+        System.out.println("County\tMax pH\n");
+        for (Map.Entry<String, Float> result : aggMaxResults.collectAsMap().entrySet()) {
+            System.out.printf("%s\t%f\n", result.getKey(), result.getValue());
+        }
 
         // try writing out a record
         try (GeoJSONFeatureWriter writer = new GeoJSONFeatureWriter()) {
