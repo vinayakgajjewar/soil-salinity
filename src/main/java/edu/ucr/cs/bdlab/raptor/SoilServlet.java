@@ -1,4 +1,3 @@
-//package org.bdlabucr;
 package edu.ucr.cs.bdlab.raptor;
 
 import java.io.IOException;
@@ -7,40 +6,16 @@ import org.json.JSONObject;
 
 // import java.util.*; // maps
 import java.io.PrintWriter;
-import java.util.List; // lists
-import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
-// for some reason, including this import causes the servlet to break :(
-//import java.nio.file.Paths; // paths
-
-// jackson library to read/write json files
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import edu.ucr.cs.bdlab.beast.io.GeoJSONFeatureWriter;
-import edu.ucr.cs.bdlab.beast.io.SpatialReader;
 import edu.ucr.cs.bdlab.beast.JavaSpatialSparkContext;
 import edu.ucr.cs.bdlab.beast.common.BeastOptions;
 import edu.ucr.cs.bdlab.beast.geolite.IFeature;
 import edu.ucr.cs.bdlab.beast.geolite.ITile;
 import edu.ucr.cs.bdlab.beast.JavaSpatialRDDHelper;
-import edu.ucr.cs.bdlab.raptor.Statistics;
-import edu.ucr.cs.bdlab.raptor.HDF4Reader;
-import edu.ucr.cs.bdlab.raptor.RaptorMixin;
-import edu.ucr.cs.bdlab.raptor.RaptorJoinResult;
-import edu.ucr.cs.bdlab.raptor.RaptorJoinFeature;
 
-
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.FileStatus;
-
-import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.JavaRDD;
-import org.apache.spark.rdd.RDD;
 import org.apache.spark.api.java.JavaPairRDD;
 
 import javax.servlet.ServletException;
@@ -49,8 +24,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import scala.Tuple2;
-import scala.Tuple4;
-import scala.Tuple5;
 
 import org.locationtech.jts.geom.Envelope;
 import org.locationtech.jts.geom.Geometry;
@@ -161,8 +134,6 @@ public class SoilServlet extends HttpServlet {
 
         PrintWriter pw = response.getWriter();
         pw.print(responseJSON.toString());
-
-        // lol
-        //response.sendError(404);
+        
     }
 }
