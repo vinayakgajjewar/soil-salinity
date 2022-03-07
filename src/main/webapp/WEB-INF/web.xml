@@ -7,20 +7,20 @@
    version="3.1">
 
   <servlet>
-    <servlet-name>Raptor</servlet-name>
-    <servlet-class>edu.ucr.cs.bdlab.raptor.RaptorServlet</servlet-class>
+    <servlet-name>FarmlandServlet</servlet-name>
+    <servlet-class>edu.ucr.cs.bdlab.raptor.FarmlandServlet</servlet-class>
   </servlet>
   <servlet>
-    <servlet-name>CountyServlet</servlet-name>
-    <servlet-class>edu.ucr.cs.bdlab.raptor.CountyServlet</servlet-class>
+    <servlet-name>SoilServlet</servlet-name>
+    <servlet-class>edu.ucr.cs.bdlab.raptor.SoilServlet</servlet-class>
   </servlet>
   <servlet-mapping>
-    <servlet-name>Raptor</servlet-name>
-    <url-pattern>/vectors/states.geojson/*</url-pattern>
+    <servlet-name>FarmlandServlet</servlet-name>
+    <url-pattern>/vectors/farmland.geojson/*</url-pattern>
   </servlet-mapping>
   <servlet-mapping>
-    <servlet-name>CountyServlet</servlet-name>
-    <url-pattern>/vectors/counties.geojson/*</url-pattern>
+    <servlet-name>SoilServlet</servlet-name>
+    <url-pattern>/vectors/soil.json/*</url-pattern>
   </servlet-mapping>
 
 </web-app>

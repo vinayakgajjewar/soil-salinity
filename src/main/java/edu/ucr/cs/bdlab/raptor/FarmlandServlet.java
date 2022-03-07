@@ -57,18 +57,16 @@ import org.locationtech.jts.geom.Envelope;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.GeometryFactory;
 
-public class RaptorServlet extends HttpServlet {
+public class FarmlandServlet extends HttpServlet {
 
     protected SparkConnector sparkconnector;
 
     protected JavaSpatialSparkContext jssc;
 
-
-
     protected DBRead dbr;
 
-    public RaptorServlet() {
-        System.out.println("----initializing servlet");
+    public FarmlandServlet() {
+        System.out.println("----initializing farmland servlet");
 
         // initialize DB reader
         dbr = DBRead.getInstance();
