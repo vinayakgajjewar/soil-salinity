@@ -1,16 +1,9 @@
-//package org.bdlabucr;
 package edu.ucr.cs.bdlab.raptor;
-
 
 import java.io.IOException;
 
-// import java.util.*; // maps
 import java.util.List; // lists
-import java.util.ArrayList;
 import java.util.Map;
-
-// for some reason, including this import causes the servlet to break :(
-//import java.nio.file.Paths; // paths
 
 // jackson library to read/write json files
 import com.fasterxml.jackson.core.JsonFactory;
@@ -18,31 +11,15 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import edu.ucr.cs.bdlab.beast.io.GeoJSONFeatureWriter;
-import edu.ucr.cs.bdlab.beast.io.SpatialReader;
 import edu.ucr.cs.bdlab.beast.JavaSpatialSparkContext;
 import edu.ucr.cs.bdlab.beast.common.BeastOptions;
 import edu.ucr.cs.bdlab.beast.geolite.IFeature;
 import edu.ucr.cs.bdlab.beast.geolite.ITile;
 import edu.ucr.cs.bdlab.beast.JavaSpatialRDDHelper;
-import edu.ucr.cs.bdlab.raptor.Statistics;
-import edu.ucr.cs.bdlab.raptor.HDF4Reader;
-import edu.ucr.cs.bdlab.raptor.RaptorMixin;
-import edu.ucr.cs.bdlab.raptor.RaptorJoinResult;
-import edu.ucr.cs.bdlab.raptor.RaptorJoinFeature;
-
-
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.FileStatus;
 
-import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.JavaRDD;
-import org.apache.spark.rdd.RDD;
 import org.apache.spark.api.java.JavaPairRDD;
-// https://spark.apache.org/docs/latest/rdd-programming-guide.html
-//import org.apache.spark.SparkContext;
-//import org.apache.spark.SparkConf;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -50,8 +27,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import scala.Tuple2;
-import scala.Tuple4;
-import scala.Tuple5;
 
 import org.locationtech.jts.geom.Envelope;
 import org.locationtech.jts.geom.Geometry;
@@ -63,13 +38,8 @@ public class FarmlandServlet extends HttpServlet {
 
     protected JavaSpatialSparkContext jssc;
 
-    protected DBRead dbr;
-
     public FarmlandServlet() {
         System.out.println("----initializing farmland servlet");
-
-        // initialize DB reader
-        dbr = DBRead.getInstance();
 
         // get or create spark context
         sparkconnector = SparkConnector.getInstance();
@@ -78,23 +48,36 @@ public class FarmlandServlet extends HttpServlet {
 
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
-        float minx, miny, maxx, maxy;
-
         // time at start of GET request
         long t1 = System.nanoTime();
+
+        float minx, miny, maxx, maxy;
+        String soilDepth = "";
+        String layer = "";
+        String agg = "";
 
         // wrap code in try-catch block to handle case where user accesses endpoint directly in browser
         try {
 
+            // get extents parameters
             minx = Float.parseFloat(request.getParameter("minx"));
             miny = Float.parseFloat(request.getParameter("miny"));
             maxx = Float.parseFloat(request.getParameter("maxx"));
             maxy = Float.parseFloat(request.getParameter("maxy"));
 
+            // get sidebar select parameters
+            soilDepth = request.getParameter("soildepth");
+            layer = request.getParameter("layer");
+            agg = request.getParameter("agg");
+
+            // print parameters
             System.out.println("----minx: " + Float.toString(minx));
             System.out.println("----miny: " + Float.toString(miny));
             System.out.println("----maxx: " + Float.toString(maxx));
             System.out.println("----maxy: " + Float.toString(maxy));
+            System.out.println("----soildepth: " + soilDepth);
+            System.out.println("----layer: " + layer);
+            System.out.println("----agg: " + agg);
 
         } catch (java.lang.NullPointerException e) {
 
@@ -106,8 +89,6 @@ public class FarmlandServlet extends HttpServlet {
             maxy = 45;
         }
 
-        //dbr.read();
-
         // we set content-type as application/geo+json
         // not application/json
         response.setContentType("application/geo+json");
@@ -118,8 +99,18 @@ public class FarmlandServlet extends HttpServlet {
         // because of CORS policy
         response.addHeader("Access-Control-Allow-Origin", "*");
 
-        // load raster data
-        JavaRDD<ITile> raster = jssc.geoTiff("data/tif/0_5_compressed/ph.tif", 0, new BeastOptions());
+        // load raster data based on selected soil depth and layer
+        String rasterPath = "data/tif/";
+        if (soilDepth.equals("0-5")) {
+            rasterPath = rasterPath.concat("0_5_compressed/");
+        } else if (soilDepth.equals("5-15")) {
+            rasterPath = rasterPath.concat("5_15_compressed/");
+        } else if (soilDepth.equals("15-30")) {
+            rasterPath = rasterPath.concat("15_30_compressed/");
+        }
+        rasterPath = rasterPath.concat(layer + ".tif");
+        System.out.println("----raster path=" + rasterPath);
+        JavaRDD<ITile> raster = jssc.geoTiff(rasterPath, 0, new BeastOptions());
 
         JavaRDD<IFeature> records = jssc.shapefile("data/shapefile/CA_farmland.zip");
         
