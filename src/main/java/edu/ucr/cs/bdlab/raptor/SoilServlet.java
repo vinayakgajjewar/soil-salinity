@@ -2,18 +2,24 @@ package edu.ucr.cs.bdlab.raptor;
 
 import java.io.IOException;
 
-import org.json.JSONObject;
-
-// import java.util.*; // maps
 import java.io.PrintWriter;
-import java.util.List;
+import java.util.List; // lists
 import java.util.Map;
 
+// jackson library to read/write json files
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import edu.ucr.cs.bdlab.beast.io.GeoJSONFeatureWriter;
 import edu.ucr.cs.bdlab.beast.JavaSpatialSparkContext;
 import edu.ucr.cs.bdlab.beast.common.BeastOptions;
 import edu.ucr.cs.bdlab.beast.geolite.IFeature;
 import edu.ucr.cs.bdlab.beast.geolite.ITile;
 import edu.ucr.cs.bdlab.beast.JavaSpatialRDDHelper;
+
+import org.apache.hadoop.conf.Configuration;
 
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaPairRDD;
@@ -45,23 +51,36 @@ public class SoilServlet extends HttpServlet {
 
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
-        float minx, miny, maxx, maxy;
-
         // time at start of GET request
         long t1 = System.nanoTime();
+
+        float minx, miny, maxx, maxy;
+        String soilDepth = "";
+        String layer = "";
+        String agg = "";
 
         // wrap code in try-catch block to handle case where user accesses endpoint directly in browser
         try {
 
+            // get extents parameters
             minx = Float.parseFloat(request.getParameter("minx"));
             miny = Float.parseFloat(request.getParameter("miny"));
             maxx = Float.parseFloat(request.getParameter("maxx"));
             maxy = Float.parseFloat(request.getParameter("maxy"));
 
+            // get sidebar select parameters
+            soilDepth = request.getParameter("soildepth");
+            layer = request.getParameter("layer");
+            agg = request.getParameter("agg");
+
+            // print parameters
             System.out.println("----minx: " + Float.toString(minx));
             System.out.println("----miny: " + Float.toString(miny));
             System.out.println("----maxx: " + Float.toString(maxx));
             System.out.println("----maxy: " + Float.toString(maxy));
+            System.out.println("----soildepth: " + soilDepth);
+            System.out.println("----layer: " + layer);
+            System.out.println("----agg: " + agg);
 
         } catch (java.lang.NullPointerException e) {
 
@@ -73,10 +92,8 @@ public class SoilServlet extends HttpServlet {
             maxy = 45;
         }
 
-        //dbr.read();
-
+        // set content-type as application/json
         response.setContentType("application/json");
-        response.setCharacterEncoding("UTF-8");
         response.setStatus(HttpServletResponse.SC_OK);
 
         // set Access-Control-Allow-Origin
@@ -84,8 +101,18 @@ public class SoilServlet extends HttpServlet {
         // because of CORS policy
         response.addHeader("Access-Control-Allow-Origin", "*");
 
-        // load raster data
-        JavaRDD<ITile> raster = jssc.geoTiff("data/tif/0_5_compressed/ph.tif", 0, new BeastOptions());
+        // load raster data based on selected soil depth and layer
+        String rasterPath = "data/tif/";
+        if (soilDepth.equals("0-5")) {
+            rasterPath = rasterPath.concat("0_5_compressed/");
+        } else if (soilDepth.equals("5-15")) {
+            rasterPath = rasterPath.concat("5_15_compressed/");
+        } else if (soilDepth.equals("15-30")) {
+            rasterPath = rasterPath.concat("15_30_compressed/");
+        }
+        rasterPath = rasterPath.concat(layer + ".tif");
+        System.out.println("----raster path=" + rasterPath);
+        JavaRDD<ITile> raster = jssc.geoTiff(rasterPath, 0, new BeastOptions());
 
         JavaRDD<IFeature> records = jssc.shapefile("data/shapefile/CA_farmland.zip");
         
@@ -117,23 +144,40 @@ public class SoilServlet extends HttpServlet {
                     float val = fv._2();
                     return new Tuple2<>(name, val);
                 });
-        
-        JSONObject responseJSON = new JSONObject();
-        
+
+        // create response writer object
+        PrintWriter out = response.getWriter();
+
+        // json response object
+        ObjectMapper mapper = new ObjectMapper();
+        ObjectNode rootNode = mapper.createObjectNode();
+
         // write output
         System.out.println("County\tMin pH\n");
         for (Map.Entry<String, Float> result : aggMinResults.collectAsMap().entrySet()) {
             System.out.printf("%s\t%f\n", result.getKey(), result.getValue());
+
         }
 
+        // populate json object with max vals
         System.out.println("County\tMax pH\n");
         for (Map.Entry<String, Float> result : aggMaxResults.collectAsMap().entrySet()) {
             System.out.printf("%s\t%f\n", result.getKey(), result.getValue());
-            responseJSON.put(result.getKey(), result.getValue());
+            rootNode.put(result.getKey(), result.getValue());
         }
 
-        PrintWriter pw = response.getWriter();
-        pw.print(responseJSON.toString());
-        
+        // write values to response writer
+        String jsonString = mapper.writer().writeValueAsString(rootNode);
+        out.print(jsonString);
+        out.flush();
+
+        // time at end of GET request
+        long t2 = System.nanoTime();
+
+        // print out statistics
+        System.out.println("----GET request duration:");
+        System.out.println((t2 - t1) * 1e-9);
+        System.out.println("----records sent:");
+        System.out.println(filteredRecords.size());
     }
 }
