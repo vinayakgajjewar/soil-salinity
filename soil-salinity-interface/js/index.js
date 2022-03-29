@@ -41,7 +41,7 @@ function makeDynamicGETRequest(map) {
 
   // base URL
   //var baseURL = "http://localhost:8080/raptor-backend-0.1-SNAPSHOT/vectors/states.geojson";
-  var baseURL = "http://localhost:8080/vectors/states.geojson";
+  var baseURL = "http://localhost:8080/vectors/farmland.geojson";
 
   // extents
   minx = map.getView().calculateExtent()[0];
@@ -49,9 +49,30 @@ function makeDynamicGETRequest(map) {
   maxx = map.getView().calculateExtent()[2];
   maxy = map.getView().calculateExtent()[3];
 
+  console.log("minx=" + minx);
+  console.log("miny=" + miny);
+  console.log("maxx=" + maxx);
+  console.log("maxy=" + maxy);
+
+  var soilDepthSelect = document.getElementById("soil-depth-select");
+  var soilDepth = soilDepthSelect.options[soilDepthSelect.selectedIndex].value;
+  console.log(soilDepth);
+
+
+  var layerSelect = document.getElementById("layer-select");
+  var layer = layerSelect.options[layerSelect.selectedIndex].value;
+  console.log(layer);
+
+  var aggSelect = document.getElementById("agg-select");
+  var agg = aggSelect.options[aggSelect.selectedIndex].value;
+  console.log(agg);
+
   // generate url with extents parameters
   // we use ol.proj.toLonLat() to convert from pixel coordinates to longitude/latitude
   var url = baseURL + "?minx=" + ol.proj.toLonLat([minx, miny])[0] + "&miny=" + ol.proj.toLonLat([minx, miny])[1] + "&maxx=" + ol.proj.toLonLat([maxx, maxy])[0] + "&maxy=" + ol.proj.toLonLat([maxx, maxy])[1];
+  
+  // add soil depth, layer, and aggregation parameters
+  url = url + "&soildepth=" + soilDepth + "&layer=" + layer + "&agg=" + agg;
 
   // iterate through all layers in map
   // when we find our vector layer, set its url to updated url with extents parameters
