@@ -71,10 +71,10 @@ public class FarmlandServlet extends HttpServlet {
             agg = request.getParameter("agg");
 
             // print parameters
-            System.out.println("----minx: " + Float.toString(minx));
-            System.out.println("----miny: " + Float.toString(miny));
-            System.out.println("----maxx: " + Float.toString(maxx));
-            System.out.println("----maxy: " + Float.toString(maxy));
+            System.out.println("----minx: " + minx);
+            System.out.println("----miny: " + miny);
+            System.out.println("----maxx: " + maxx);
+            System.out.println("----maxy: " + maxy);
             System.out.println("----soildepth: " + soilDepth);
             System.out.println("----layer: " + layer);
             System.out.println("----agg: " + agg);

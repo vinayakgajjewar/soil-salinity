@@ -74,10 +74,10 @@ public class SoilServlet extends HttpServlet {
             agg = request.getParameter("agg");
 
             // print parameters
-            System.out.println("----minx: " + Float.toString(minx));
-            System.out.println("----miny: " + Float.toString(miny));
-            System.out.println("----maxx: " + Float.toString(maxx));
-            System.out.println("----maxy: " + Float.toString(maxy));
+            System.out.println("----minx: " + minx);
+            System.out.println("----miny: " + miny);
+            System.out.println("----maxx: " + maxx);
+            System.out.println("----maxy: " + maxy);
             System.out.println("----soildepth: " + soilDepth);
             System.out.println("----layer: " + layer);
             System.out.println("----agg: " + agg);
@@ -112,8 +112,9 @@ public class SoilServlet extends HttpServlet {
         }
         rasterPath = rasterPath.concat(layer + ".tif");
         System.out.println("----raster path=" + rasterPath);
-        JavaRDD<ITile> raster = jssc.geoTiff(rasterPath, 0, new BeastOptions());
 
+        // load raster and vector data
+        JavaRDD<ITile> raster = jssc.geoTiff(rasterPath, 0, new BeastOptions());
         JavaRDD<IFeature> records = jssc.shapefile("data/shapefile/CA_farmland.zip");
         
         // filter by map extents
