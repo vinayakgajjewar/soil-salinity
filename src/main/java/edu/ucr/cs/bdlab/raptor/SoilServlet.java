@@ -128,23 +128,30 @@ public class SoilServlet extends HttpServlet {
         // run raptor join operation
         JavaRDD<RaptorJoinFeature<Float>> join = JavaSpatialRDDHelper.raptorJoin(jssc.parallelize(filteredRecords), raster, new BeastOptions());
 
-        // aggregate min results
-        JavaPairRDD<String, Float> aggMinResults = join.mapToPair(v -> new Tuple2<>(v.feature(), v.m()))
-            .reduceByKey(Float::min)
-            .mapToPair(fv -> {
-                String name = fv._1().getAs("County");
-                float val = fv._2();
-                return new Tuple2<>(name, val);
-            });
+        // aggregate results RDD
+        JavaPairRDD<String, Float> aggResults = null;
+        // compute aggregate results based on selected aggregation
+        if (agg.equals("Minimum")) {
 
-        // aggregate max results
-        JavaPairRDD<String, Float> aggMaxResults = join.mapToPair(v -> new Tuple2<>(v.feature(), v.m()))
-                .reduceByKey(Float::max)
-                .mapToPair(fv -> {
-                    String name = fv._1().getAs("County");
-                    float val = fv._2();
-                    return new Tuple2<>(name, val);
-                });
+            // aggregate min results
+            aggResults = join.mapToPair(v -> new Tuple2<>(v.feature(), v.m()))
+                    .reduceByKey(Float::min)
+                    .mapToPair(fv -> {
+                        String name = fv._1().getAs("County");
+                        float val = fv._2();
+                        return new Tuple2<>(name, val);
+                    });
+        } else if (agg.equals("Maximum")) {
+
+            // aggregate max results
+            aggResults = join.mapToPair(v -> new Tuple2<>(v.feature(), v.m()))
+                    .reduceByKey(Float::max)
+                    .mapToPair(fv -> {
+                        String name = fv._1().getAs("County");
+                        float val = fv._2();
+                        return new Tuple2<>(name, val);
+                    });
+        }
 
         // create response writer object
         PrintWriter out = response.getWriter();
@@ -153,16 +160,9 @@ public class SoilServlet extends HttpServlet {
         ObjectMapper mapper = new ObjectMapper();
         ObjectNode rootNode = mapper.createObjectNode();
 
-        // write output
-        System.out.println("County\tMin pH\n");
-        for (Map.Entry<String, Float> result : aggMinResults.collectAsMap().entrySet()) {
-            System.out.printf("%s\t%f\n", result.getKey(), result.getValue());
-
-        }
-
         // populate json object with max vals
         System.out.println("County\tMax pH\n");
-        for (Map.Entry<String, Float> result : aggMaxResults.collectAsMap().entrySet()) {
+        for (Map.Entry<String, Float> result : aggResults.collectAsMap().entrySet()) {
             System.out.printf("%s\t%f\n", result.getKey(), result.getValue());
             rootNode.put(result.getKey(), result.getValue());
         }
