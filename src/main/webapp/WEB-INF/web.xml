@@ -14,6 +14,10 @@
     <servlet-name>SoilServlet</servlet-name>
     <servlet-class>edu.ucr.cs.bdlab.raptor.SoilServlet</servlet-class>
   </servlet>
+  <servlet>
+    <servlet-name>SinglePolygonServlet</servlet-name>
+    <servlet-class>edu.ucr.cs.bdlab.raptor.SinglePolygonServlet</servlet-class>
+  </servlet>
   <servlet-mapping>
     <servlet-name>FarmlandServlet</servlet-name>
     <url-pattern>/vectors/farmland.geojson/*</url-pattern>
@@ -21,6 +25,10 @@
   <servlet-mapping>
     <servlet-name>SoilServlet</servlet-name>
     <url-pattern>/vectors/soil.json/*</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>SinglePolygonServlet</servlet-name>
+    <url-pattern>/vectors/singlepolygon.json/*</url-pattern>
   </servlet-mapping>
 
 </web-app>
