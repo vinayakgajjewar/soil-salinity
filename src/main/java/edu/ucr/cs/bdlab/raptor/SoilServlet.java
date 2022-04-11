@@ -7,19 +7,14 @@ import java.util.List; // lists
 import java.util.Map;
 
 // jackson library to read/write json files
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import edu.ucr.cs.bdlab.beast.io.GeoJSONFeatureWriter;
 import edu.ucr.cs.bdlab.beast.JavaSpatialSparkContext;
 import edu.ucr.cs.bdlab.beast.common.BeastOptions;
 import edu.ucr.cs.bdlab.beast.geolite.IFeature;
 import edu.ucr.cs.bdlab.beast.geolite.ITile;
 import edu.ucr.cs.bdlab.beast.JavaSpatialRDDHelper;
-
-import org.apache.hadoop.conf.Configuration;
 
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaPairRDD;
