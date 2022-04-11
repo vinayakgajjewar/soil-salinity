@@ -2,3 +2,6 @@ target/
 data/
 .DS_Store
 .idea/
+.classpath
+.project
+*.prefs
