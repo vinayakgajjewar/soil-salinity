@@ -42,9 +42,7 @@ function singlePolygonGETRequest(encodedCoords) {
   var xmlHttp = new XMLHttpRequest();
   var url = "http://localhost:8080/vectors/singlepolygon.json";
   xmlHttp.onreadystatechange = function() {
-    if (xmlHttp.readyState == 4 && xmlHttp.status == 200) {
-      callback(xmlHttp.responseText);
-    }
+    console.log("status = " + xmlHttp.status);
   }
   xmlHttp.open("POST", url, true);
   xmlHttp.send(encodedCoords);
