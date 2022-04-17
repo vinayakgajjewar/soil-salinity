@@ -37,6 +37,19 @@ var polygonStyle = new ol.style.Style({
   })
 });
 
+// function to make a GET request for a single polygon
+function singlePolygonGETRequest(encodedCoords) {
+  var xmlHttp = new XMLHttpRequest();
+  var url = "http://localhost:8080/vectors/singlepolygon.json";
+  xmlHttp.onreadystatechange = function() {
+    if (xmlHttp.readyState == 4 && xmlHttp.status == 200) {
+      callback(xmlHttp.responseText);
+    }
+  }
+  xmlHttp.open("POST", url, true);
+  xmlHttp.send(encodedCoords);
+}
+
 function makeDynamicGETRequest(map) {
 
   // base URL
@@ -144,7 +157,7 @@ $(document).ready(function () {
       let popupContent = `
         County: ${feature.get("County")}
         <br>
-        Acres: ${feature.get("Acres")}
+        Acres: ${feature.get("OBJECTID")}
         <br>
         Crop2014: ${feature.get("Crop2014")}
         <br>
@@ -170,6 +183,14 @@ $(document).ready(function () {
       return feature;
     });
     if (feature) {
+
+      // get polygon geometry
+      console.log(feature.getGeometry().getCoordinates());
+      console.log(btoa(feature.getGeometry().getCoordinates()));
+
+      // make single polygon request
+      singlePolygonGETRequest(btoa(feature.getGeometry().getCoordinates()));
+
       // if we're clicking on a feature, display more info on the side
       document.getElementById("County").innerHTML = feature.get("County");
       document.getElementById("Acres").innerHTML = feature.get("Acres");
