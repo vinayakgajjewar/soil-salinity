@@ -11,6 +11,7 @@
 
   <properties>
     <jettyVersion>9.3.24.v20180605</jettyVersion>
+      <scala.version>2.12.7</scala.version>
 
     <!--https://stackoverflow.com/questions/53034953/error-source-option-5-is-no-longer-supported-use-6-or-later-on-maven-compile-->
     <maven.compiler.source>1.8</maven.compiler.source>

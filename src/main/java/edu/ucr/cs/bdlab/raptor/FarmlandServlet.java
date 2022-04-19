@@ -1,5 +1,7 @@
 package edu.ucr.cs.bdlab.raptor;
 
+import edu.ucr.cs.bdlab.raptor.SingleMachineRaptorJoin;
+
 import java.io.IOException;
 
 import java.util.List; // lists
@@ -42,6 +44,8 @@ public class FarmlandServlet extends HttpServlet {
     }
 
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+
+        SingleMachineRaptorJoin$.join();
 
         // time at start of GET request
         long t1 = System.nanoTime();
