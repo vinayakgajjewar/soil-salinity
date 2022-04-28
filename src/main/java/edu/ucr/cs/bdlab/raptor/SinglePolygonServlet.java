@@ -29,6 +29,12 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.io.ParseException;
+import org.locationtech.jts.io.geojson.GeoJsonReader;
+
+import org.json.JSONObject;
 import scala.Tuple2;
 
 public class SinglePolygonServlet extends HttpServlet {
@@ -62,6 +68,16 @@ public class SinglePolygonServlet extends HttpServlet {
         byte[] decodedBytes = Base64.getDecoder().decode(encodedData.getBytes());
         String decodedString = new String(decodedBytes, StandardCharsets.UTF_8);
         System.out.println(decodedString);
+
+        // initialize geojson reader
+        GeoJsonReader reader = new GeoJsonReader(new GeometryFactory());
+
+        // try reading the geojson string into a geometry object
+        try {
+            Geometry geom = reader.read(decodedString);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
 
         // time at end of GET request
         long t2 = System.nanoTime();

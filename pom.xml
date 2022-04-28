@@ -54,7 +54,15 @@
     <version>1.18.1</version>
 </dependency>
 
-    <dependency>
+      <!-- https://mvnrepository.com/artifact/org.locationtech.jts.io/jts-io-common -->
+      <dependency>
+          <groupId>org.locationtech.jts.io</groupId>
+          <artifactId>jts-io-common</artifactId>
+          <version>1.18.2</version>
+      </dependency>
+
+
+      <dependency>
       <groupId>javax.servlet</groupId>
       <artifactId>javax.servlet-api</artifactId>
       <version>3.1.0</version>
@@ -78,6 +86,31 @@
           <target>1.8</target>
         </configuration>
       </plugin>
+
+        <!--scala integration-->
+        <plugin>
+            <groupId>net.alchim31.maven</groupId>
+            <artifactId>scala-maven-plugin</artifactId>
+            <version>4.5.6</version>
+            <executions>
+                <execution>
+                    <id>scala-compile-first</id>
+                    <phase>process-resources</phase>
+                    <goals>
+                        <goal>add-source</goal>
+                        <goal>compile</goal>
+                    </goals>
+                </execution>
+                <execution>
+                    <id>scala-test-compile</id>
+                    <phase>process-test-resources</phase>
+                    <goals>
+                        <goal>testCompile</goal>
+                    </goals>
+                </execution>
+            </executions>
+        </plugin>
+
     </plugins>
   </build>
 
