@@ -1,6 +1,6 @@
 # soil-salinity
 
-This project combines California farmland vector data and satellite soil salinity data and displays the result in an interactive web interface. We use 
+This project combines California farmland vector data and satellite soil salinity data and displays the result in an interactive web interface.
 
 ## Features
 
@@ -10,5 +10,22 @@ This project combines California farmland vector data and satellite soil salinit
 - Dynamic extents
 
 ## Installation
+
+### Dependencies
+
+The soil salinity backend relies upon Java 1.8.0 and Scala 2.12.7.
+
+### Setup
+
+This project expects all data files (shapefile, GeoTIFF) to be stored in the `data/` directory.
+The data directory should be organized as follows:
+
+![data directory](directory_organization.png)
+
+### Server deployment
+
+Use the command `> mvn clean package` to generate a WAR file in the `target/` directory.
+The file should be named `raptor-backend-0.1-SNAPSHOT.war`.
+To deploy this generated WAR file, simply copy it to the `webapps/` folder of your Apache Tomcat installation directory.
 
 ## License
