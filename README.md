@@ -24,7 +24,7 @@ The data directory should be organized as follows:
 
 ### Server deployment
 
-Use the command `> mvn clean package` to generate a WAR file in the `target/` directory.
+Use the command `mvn clean package` to generate a WAR file in the `target/` directory.
 The file should be named `raptor-backend-0.1-SNAPSHOT.war`.
 To deploy this generated WAR file, simply copy it to the `webapps/` folder of your Apache Tomcat installation directory.
 
