@@ -5,3 +5,4 @@ data/
 .classpath
 .project
 *.prefs
+temp.geojson
