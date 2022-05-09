@@ -21,24 +21,30 @@ import edu.ucr.cs.bdlab.beast.io.SpatialFileRDD
 import org.apache.hadoop.conf.Configuration
 import org.apache.spark.SparkConf;
 import org.apache.hadoop.fs.{FileSystem, Path}
+import java.lang.Float
+
+import org.locationtech.jts.geom.Geometry
 
 object SingleMachineRaptorJoin {
 //class SingleMachineRaptorJoin {
   //def join(args: Array[String]): Unit = {
-  def join(): Unit = {
+  def join(vectorPath: String, rasterPath: String, geom: Geometry): java.lang.Float = {
+    geom.setSRID(3857)
     val conf = new SparkConf()
-    val vectorFileName: String = "tl_2018_us_state.zip"
-    val rasterFileNames: Array[String] = Array("glc2000_v1_1.tif")
+    val vectorFileName: String = vectorPath
+    val rasterFileNames: Array[String] = Array(rasterPath)
     val inputVector: Array[IFeature] = SpatialFileRDD.readLocal(vectorFileName, "shapefile",
       new BeastOptions(), new Configuration()).toArray
     val intersections: Array[Intersections] = rasterFileNames.map(rasterFileName => {
       val rasterFS: FileSystem = new Path(rasterFileName).getFileSystem(new Configuration())
       val rasterReader = RasterHelper.createRasterReader(rasterFS, new Path(rasterFileName), new BeastOptions(), new SparkConf())
       val intersections = new Intersections()
-      intersections.compute(inputVector.map(_.getGeometry), rasterReader.metadata, new BeastOptions())
+      //intersections.compute(inputVector.map(_.getGeometry), rasterReader.metadata, new BeastOptions())
+      intersections.compute(Array(geom), rasterReader.metadata, new BeastOptions())
       intersections
     })
-    val intersectionIterator: Iterator[(Long, PixelRange)] = new IntersectionsIterator(rasterFileNames.indices.toArray, intersections)
-    val pixelIterator: Iterator[RaptorJoinResult[Long]] = new PixelIterator(intersectionIterator, rasterFileNames, "0")
+    val intersectionIterator: Iterator[(scala.Long, PixelRange)] = new IntersectionsIterator(rasterFileNames.indices.toArray, intersections)
+    val pixelIterator: Iterator[RaptorJoinResult[scala.Float]] = new PixelIterator(intersectionIterator, rasterFileNames, "0")
+    pixelIterator.map(x => (x.m)).max.asInstanceOf[java.lang.Float]
   }
 }
