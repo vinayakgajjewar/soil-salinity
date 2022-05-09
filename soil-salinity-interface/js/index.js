@@ -201,11 +201,16 @@ $(document).ready(function () {
     if (feature) {
 
       // get polygon geometry
-      console.log(feature.getGeometry().getCoordinates());
-      console.log(btoa(feature.getGeometry().getCoordinates()));
+      //console.log(feature.getGeometry().getCoordinates());
+      //console.log(feature.getGeometry());
+      var featureGeometry = feature.getGeometry();
+      var featureGeoJSON = new ol.format.GeoJSON().writeFeature(feature, {});
+      //console.log(featureGeoJSON);
+      //console.log(featureGeometry);
+      console.log(featureGeoJSON);
 
       // make single polygon request
-      singlePolygonGETRequest(btoa(feature.getGeometry().getCoordinates()));
+      singlePolygonGETRequest(btoa(featureGeoJSON));
 
       // if we're clicking on a feature, display more info on the side
       document.getElementById("County").innerHTML = feature.get("County");
@@ -217,10 +222,10 @@ $(document).ready(function () {
 
   // make dynamic GET request at end of map move event
   // only want to make request if zoom level is high enough
+  // otherwise the request will take too long
   map.on("moveend", function() {
-    /*if (map.getView().getZoom() >= 12) {
+    if (map.getView().getZoom() >= 12) {
       makeDynamicGETRequest(map);
-    }*/
-    makeDynamicGETRequest(map);
+    }
   });
 });
