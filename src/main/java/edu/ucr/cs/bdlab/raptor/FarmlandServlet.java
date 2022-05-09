@@ -24,6 +24,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import scala.Tuple2;
+import scala.Long;
 
 import org.locationtech.jts.geom.Envelope;
 import org.locationtech.jts.geom.Geometry;
@@ -44,8 +45,6 @@ public class FarmlandServlet extends HttpServlet {
     }
 
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-
-        SingleMachineRaptorJoin$.join();
 
         // time at start of GET request
         long t1 = System.nanoTime();
@@ -99,7 +98,7 @@ public class FarmlandServlet extends HttpServlet {
         response.addHeader("Access-Control-Allow-Origin", "*");
 
         // load raster data based on selected soil depth and layer
-        String rasterPath = "data/tif/";
+        /*String rasterPath = "data/tif/";
         if (soilDepth.equals("0-5")) {
             rasterPath = rasterPath.concat("0_5_compressed/");
         } else if (soilDepth.equals("5-15")) {
@@ -110,9 +109,10 @@ public class FarmlandServlet extends HttpServlet {
         rasterPath = rasterPath.concat(layer + ".tif");
         System.out.println("----raster path=" + rasterPath);
         JavaRDD<ITile> raster = jssc.geoTiff(rasterPath, 0, new BeastOptions());
+         */
 
         JavaRDD<IFeature> records = jssc.shapefile("data/shapefile/CA_farmland.zip");
-        
+
         // filter by map extents
         GeometryFactory geometryFactory = new GeometryFactory();
         Geometry extents = geometryFactory.toGeometry(new Envelope(minx, maxx, miny, maxy));
@@ -121,6 +121,7 @@ public class FarmlandServlet extends HttpServlet {
 
         System.out.println("----done reading records");
 
+        /*
         // run raptor join operation
         JavaRDD<RaptorJoinFeature<Float>> join = JavaSpatialRDDHelper.raptorJoin(jssc.parallelize(filteredRecords), raster, new BeastOptions());
 
@@ -152,6 +153,8 @@ public class FarmlandServlet extends HttpServlet {
         for (Map.Entry<String, Float> result : aggMaxResults.collectAsMap().entrySet()) {
             System.out.printf("%s\t%f\n", result.getKey(), result.getValue());
         }
+         */
+
 
         // try writing out a record
         try (GeoJSONFeatureWriter writer = new GeoJSONFeatureWriter()) {

@@ -8,8 +8,8 @@ import java.util.Map;
 
 // jackson library to read/write json files
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import com.fasterxml.jackson.databind.node.ObjectNode;
+
 import edu.ucr.cs.bdlab.beast.JavaSpatialSparkContext;
 import edu.ucr.cs.bdlab.beast.common.BeastOptions;
 import edu.ucr.cs.bdlab.beast.geolite.IFeature;
@@ -121,6 +121,8 @@ public class SoilServlet extends HttpServlet {
         System.out.println("----done reading records");
 
         // run raptor join operation
+        // TODO: convert to single machine join operation
+        // TODO: write wrapper function
         JavaRDD<RaptorJoinFeature<Float>> join = JavaSpatialRDDHelper.raptorJoin(jssc.parallelize(filteredRecords), raster, new BeastOptions());
 
         // aggregate results RDD
