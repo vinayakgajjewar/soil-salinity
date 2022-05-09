@@ -41,6 +41,24 @@ var polygonStyle = new ol.style.Style({
 function singlePolygonGETRequest(encodedCoords) {
   var xmlHttp = new XMLHttpRequest();
   var url = "http://localhost:8080/vectors/singlepolygon.json";
+
+  // get sidebar selections
+  var soilDepthSelect = document.getElementById("soil-depth-select");
+  var soilDepth = soilDepthSelect.options[soilDepthSelect.selectedIndex].value;
+  console.log(soilDepth);
+
+
+  var layerSelect = document.getElementById("layer-select");
+  var layer = layerSelect.options[layerSelect.selectedIndex].value;
+  console.log(layer);
+
+  var aggSelect = document.getElementById("agg-select");
+  var agg = aggSelect.options[aggSelect.selectedIndex].value;
+  console.log(agg);
+
+  // add soil depth, layer, and aggregation parameters
+  url = url + "?soildepth=" + soilDepth + "&layer=" + layer + "&agg=" + agg;
+
   xmlHttp.onreadystatechange = function() {
     console.log("status = " + xmlHttp.status);
   }
