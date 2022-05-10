@@ -56,22 +56,18 @@ public class SinglePolygonServlet extends HttpServlet {
         // sidebar select parameters
         String soilDepth = "";
         String layer = "";
-        String agg = "";
 
         // try getting parameters from url
         try {
             soilDepth = request.getParameter("soildepth");
             layer = request.getParameter("layer");
-            agg = request.getParameter("agg");
 
             // print parameters
             System.out.println("----soildepth: " + soilDepth);
             System.out.println("----layer: " + layer);
-            System.out.println("----agg: " + agg);
         } catch (java.lang.NullPointerException e) {
 
             // print error if we can't get parameters
-            System.out.println("---ERROR in SinglePolygonServlet");
             System.out.println(e);
         }
 
@@ -122,8 +118,10 @@ public class SinglePolygonServlet extends HttpServlet {
 
         // now that we have a geometry object
         // call single machine raptor join
-        float singleMachineResults = SingleMachineRaptorJoin.join(vectorPath, rasterPath, geom);
-        System.out.println("----single machine results: " + singleMachineResults);
+        Tuple2<Float, Float> singleMachineResults = SingleMachineRaptorJoin.join(vectorPath, rasterPath, geom);
+        System.out.println("----single machine results");
+        System.out.println("----min: " + singleMachineResults._1);
+        System.out.println("----max: " + singleMachineResults._2);
 
         // write the geometry string to a temp file
         //PrintWriter out = new PrintWriter("temp.geojson");
@@ -151,7 +149,8 @@ public class SinglePolygonServlet extends HttpServlet {
         PrintWriter resWriter = response.getWriter();
         ObjectMapper mapper = new ObjectMapper();
         ObjectNode rootNode = mapper.createObjectNode();
-        rootNode.put("min", singleMachineResults);
+        rootNode.put("min", singleMachineResults._1);
+        rootNode.put("max", singleMachineResults._2);
         String jsonString = mapper.writer().writeValueAsString(rootNode);
         resWriter.print(jsonString);
         resWriter.flush();
