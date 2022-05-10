@@ -1,19 +1,11 @@
 package edu.ucr.cs.bdlab.raptor;
 
-import edu.ucr.cs.bdlab.beast.JavaSpatialRDDHelper;
-import edu.ucr.cs.bdlab.beast.common.BeastOptions;
-import edu.ucr.cs.bdlab.beast.geolite.IFeature;
-import edu.ucr.cs.bdlab.beast.geolite.ITile;
-import edu.ucr.cs.bdlab.beast.io.SpatialReader;
 import edu.ucr.cs.bdlab.beast.JavaSpatialSparkContext;
-import edu.ucr.cs.bdlab.raptor.SingleMachineRaptorJoin;
 
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
-import java.util.List;
-import java.util.Map;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -23,19 +15,17 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.spark.api.java.JavaPairRDD;
-import org.apache.spark.api.java.JavaRDD;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.io.ParseException;
 import org.locationtech.jts.io.geojson.GeoJsonReader;
+
 import scala.Tuple2;
 
 public class SinglePolygonServlet extends HttpServlet {
 
     private SparkConnector sparkconnector;
     private JavaSpatialSparkContext jssc;
-    private String vectorPath;
 
     public SinglePolygonServlet() {
         System.out.println("----initializing single polygon servlet");
@@ -43,9 +33,6 @@ public class SinglePolygonServlet extends HttpServlet {
         // get or create spark context
         sparkconnector = SparkConnector.getInstance();
         jssc = new JavaSpatialSparkContext(sparkconnector.getSC());
-
-        // set vector data file path
-        vectorPath = "data/shapefile/CA_farmland.zip";
     }
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -118,32 +105,10 @@ public class SinglePolygonServlet extends HttpServlet {
 
         // now that we have a geometry object
         // call single machine raptor join
-        Tuple2<Float, Float> singleMachineResults = SingleMachineRaptorJoin.join(vectorPath, rasterPath, geom);
+        Tuple2<Float, Float> singleMachineResults = SingleMachineRaptorJoin.join(rasterPath, geom);
         System.out.println("----single machine results");
         System.out.println("----min: " + singleMachineResults._1);
         System.out.println("----max: " + singleMachineResults._2);
-
-        // write the geometry string to a temp file
-        //PrintWriter out = new PrintWriter("temp.geojson");
-        //out.println(geomString);
-        //out.close();
-
-        // read temp file into list of ifeatures
-        //List<IFeature> singleIFeature = SpatialReader.readInput(jssc, new BeastOptions(), "temp.geojson", "geojson").collect();
-
-        // run distributed raptor join operation
-        //JavaRDD<ITile> raster = jssc.geoTiff("data/tif/0_5_compressed/lambda.tif", 0, new BeastOptions());
-        //JavaRDD<RaptorJoinFeature<Float>> join = JavaSpatialRDDHelper.raptorJoin(jssc.parallelize(singleIFeature), raster, new BeastOptions());
-
-        // aggregate min results
-        //JavaPairRDD<String, Float> aggResults = null;
-        //aggResults = join.mapToPair(v -> new Tuple2<>(v.feature(), v.m()))
-        //        .reduceByKey(Float::min)
-        //        .mapToPair(fv -> {
-        //            String name = fv._1().getAs("County");
-        //            float val = fv._2();
-        //            return new Tuple2<>(name, val);
-        //        });
 
         // write result to json object
         PrintWriter resWriter = response.getWriter();
