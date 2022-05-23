@@ -40,7 +40,7 @@ var polygonStyle = new ol.style.Style({
 // function to make a GET request for a single polygon
 function singlePolygonGETRequest(encodedCoords) {
   var xmlHttp = new XMLHttpRequest();
-  var url = "http://localhost:8080/vectors/singlepolygon.json";
+  var url = "http://localhost:8080/soil/singlepolygon.json";
 
   // get sidebar selections
   var soilDepthSelect = document.getElementById("soil-depth-select");

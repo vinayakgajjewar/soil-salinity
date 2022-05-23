@@ -24,11 +24,13 @@
   </servlet-mapping>
   <servlet-mapping>
     <servlet-name>SoilServlet</servlet-name>
-    <url-pattern>/vectors/soil.json/*</url-pattern>
+    <!--<url-pattern>/vectors/soil.json/*</url-pattern>-->
+    <url-pattern>/soil/farmland.json/*</url-pattern>
   </servlet-mapping>
   <servlet-mapping>
     <servlet-name>SinglePolygonServlet</servlet-name>
-    <url-pattern>/vectors/singlepolygon.json/*</url-pattern>
+    <!--<url-pattern>/vectors/singlepolygon.json/*</url-pattern>-->
+    <url-pattern>/soil/singlepolygon.json/*</url-pattern>
   </servlet-mapping>
 
 </web-app>
