@@ -134,9 +134,7 @@ public class SoilServlet extends HttpServlet {
             aggResults = join.mapToPair(v -> new Tuple2<>(v.feature(), v.m()))
                     .reduceByKey(Float::min)
                     .mapToPair(fv -> {
-                        String name = fv._1().getAs("County");
-                        float val = fv._2();
-                        return new Tuple2<>(name, val);
+                        return new Tuple2<>(Long.toString(fv._1().getAs("OBJECTID")), fv._2());
                     });
         } else if (agg.equals("Maximum")) {
 
@@ -144,9 +142,7 @@ public class SoilServlet extends HttpServlet {
             aggResults = join.mapToPair(v -> new Tuple2<>(v.feature(), v.m()))
                     .reduceByKey(Float::max)
                     .mapToPair(fv -> {
-                        String name = fv._1().getAs("County");
-                        float val = fv._2();
-                        return new Tuple2<>(name, val);
+                        return new Tuple2<>(Long.toString(fv._1().getAs("OBJECTID")), fv._2());
                     });
         }
 
