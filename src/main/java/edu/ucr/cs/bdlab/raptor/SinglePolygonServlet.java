@@ -1,7 +1,5 @@
 package edu.ucr.cs.bdlab.raptor;
 
-import edu.ucr.cs.bdlab.beast.JavaSpatialSparkContext;
-
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
@@ -10,7 +8,6 @@ import java.util.Base64;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -24,20 +21,15 @@ import scala.Tuple2;
 
 public class SinglePolygonServlet extends HttpServlet {
 
-    private SparkConnector sparkconnector;
-    private JavaSpatialSparkContext jssc;
-
+    // constructor
     public SinglePolygonServlet() {
         System.out.println("----initializing single polygon servlet");
-
-        // get or create spark context
-        sparkconnector = SparkConnector.getInstance();
-        jssc = new JavaSpatialSparkContext(sparkconnector.getSC());
     }
 
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    // post method
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
 
-        // time at start of GET request
+        // time at start of POST request
         long t1 = System.nanoTime();
 
         // sidebar select parameters
@@ -55,7 +47,7 @@ public class SinglePolygonServlet extends HttpServlet {
         } catch (java.lang.NullPointerException e) {
 
             // print error if we can't get parameters
-            System.out.println(e);
+            e.printStackTrace();
         }
 
         // set content-type as application/json
@@ -119,14 +111,17 @@ public class SinglePolygonServlet extends HttpServlet {
         // write result to json object
         PrintWriter resWriter = response.getWriter();
         ObjectMapper mapper = new ObjectMapper();
+        // write results
         ObjectNode rootNode = mapper.createObjectNode();
+        rootNode.put("soildepth", soilDepth);
+        rootNode.put("layer", layer);
         rootNode.put("min", singleMachineResults._1);
         rootNode.put("max", singleMachineResults._2);
         String jsonString = mapper.writer().writeValueAsString(rootNode);
         resWriter.print(jsonString);
         resWriter.flush();
 
-        // time at end of GET request
+        // time at end of POST request
         long t2 = System.nanoTime();
 
         // print out statistics
