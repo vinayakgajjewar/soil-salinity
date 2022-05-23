@@ -57,7 +57,7 @@ function singlePolygonGETRequest(encodedCoords) {
   console.log(agg);
 
   // add soil depth, layer, and aggregation parameters
-  url = url + "?soildepth=" + soilDepth + "&layer=" + layer + "&agg=" + agg;
+  url = url + "?soildepth=" + soilDepth + "&layer=" + layer;
 
   xmlHttp.onreadystatechange = function() {
     console.log("status = " + xmlHttp.status);
