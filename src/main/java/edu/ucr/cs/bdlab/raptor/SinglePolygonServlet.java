@@ -69,12 +69,18 @@ public class SinglePolygonServlet extends HttpServlet {
 
         // load raster data based on layer and soil depth
         String rasterPath = "data/tif/";
-        if (soilDepth.equals("0-5")) {
-            rasterPath = rasterPath.concat("0_5_compressed/");
-        } else if (soilDepth.equals("5-15")) {
-            rasterPath = rasterPath.concat("5_15_compressed/");
-        } else if (soilDepth.equals("15-30")) {
-            rasterPath = rasterPath.concat("15_30_compressed/");
+
+        // select soil depth
+        switch (soilDepth) {
+            case "0-5":
+                rasterPath = rasterPath.concat("0_5_compressed/");
+                break;
+            case "5-15":
+                rasterPath = rasterPath.concat("5_15_compressed/");
+                break;
+            case "15-30":
+                rasterPath = rasterPath.concat("15_30_compressed/");
+                break;
         }
         rasterPath = rasterPath.concat(layer + ".tif");
         System.out.println("----raster path=" + rasterPath);
