@@ -201,12 +201,7 @@ $(document).ready(function () {
     if (feature) {
 
       // get polygon geometry
-      //console.log(feature.getGeometry().getCoordinates());
-      //console.log(feature.getGeometry());
-      var featureGeometry = feature.getGeometry();
       var featureGeoJSON = new ol.format.GeoJSON().writeFeature(feature, {});
-      //console.log(featureGeoJSON);
-      //console.log(featureGeometry);
       console.log(featureGeoJSON);
 
       // make single polygon request
