@@ -4,10 +4,10 @@
 
   <modelVersion>4.0.0</modelVersion>
   <groupId>edu.ucr.cs.bdlab.raptor</groupId>
-  <artifactId>raptor-backend</artifactId>
+  <artifactId>futurefarmnow-backend</artifactId>
   <version>0.1-SNAPSHOT</version>
   <packaging>war</packaging>
-  <name>Raptor Backend App</name>
+  <name>FutureFarmNow Backend</name>
 
   <properties>
     <jettyVersion>9.3.24.v20180605</jettyVersion>
