@@ -1,3 +1,7 @@
+// endpoint urls
+var singlePolygonURL = "http://localhost:8080/soil/singlepolygon.json";
+var farmlandURL = "http://localhost:8080/vectors/farmland.geojson";
+
 // elements that make up the popup
 const container = document.getElementById("popup");
 const content = document.getElementById("popup-content");
@@ -40,7 +44,7 @@ var polygonStyle = new ol.style.Style({
 // function to make a GET request for a single polygon
 function singlePolygonGETRequest(encodedCoords) {
   var xmlHttp = new XMLHttpRequest();
-  var url = "http://localhost:8080/soil/singlepolygon.json";
+  var url = singlePolygonURL;
 
   // get sidebar selections
   var soilDepthSelect = document.getElementById("soil-depth-select");
@@ -70,7 +74,7 @@ function makeDynamicGETRequest(map) {
 
   // base URL
   //var baseURL = "http://localhost:8080/raptor-backend-0.1-SNAPSHOT/vectors/states.geojson";
-  var baseURL = "http://localhost:8080/vectors/farmland.geojson";
+  var baseURL = farmlandURL;
 
   // extents
   minx = map.getView().calculateExtent()[0];
