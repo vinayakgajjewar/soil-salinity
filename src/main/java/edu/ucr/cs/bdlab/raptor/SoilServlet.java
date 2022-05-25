@@ -174,6 +174,7 @@ public class SoilServlet extends HttpServlet {
 
         // populate json object with max vals
         System.out.println("County\tMax pH\n");
+        assert aggResults != null;
         for (Map.Entry<String, Float> result : aggResults.collectAsMap().entrySet()) {
             System.out.printf("%s\t%f\n", result.getKey(), result.getValue());
             resultsNode.put(result.getKey(), result.getValue());
