@@ -146,19 +146,39 @@ public class SoilServlet extends HttpServlet {
                     });
         }
 
-        // create response writer object
+        // write results to json object
         PrintWriter out = response.getWriter();
-
-        // json response object
         ObjectMapper mapper = new ObjectMapper();
-        ObjectNode rootNode = mapper.createObjectNode();
+
+        // create query node
+        ObjectNode queryNode = mapper.createObjectNode();
+        queryNode.put("soildepth", soilDepth);
+        queryNode.put("layer", layer);
+
+        // create mbr node
+        // inside query node
+        ObjectNode mbrNode = mapper.createObjectNode();
+        mbrNode.put("minx", minx);
+        mbrNode.put("miny", miny);
+        mbrNode.put("maxx", maxx);
+        mbrNode.put("maxy", maxy);
+        queryNode.set("mbr", mbrNode);
+
+        // create results node
+        ObjectNode resultsNode = mapper.createObjectNode();
 
         // populate json object with max vals
         System.out.println("County\tMax pH\n");
         for (Map.Entry<String, Float> result : aggResults.collectAsMap().entrySet()) {
             System.out.printf("%s\t%f\n", result.getKey(), result.getValue());
-            rootNode.put(result.getKey(), result.getValue());
+            resultsNode.put(result.getKey(), result.getValue());
         }
+
+        // create root node
+        // contains queryNode and resultsNode
+        ObjectNode rootNode = mapper.createObjectNode();
+        rootNode.set("query", queryNode);
+        rootNode.set("results", resultsNode);
 
         // write values to response writer
         String jsonString = mapper.writer().writeValueAsString(rootNode);
