@@ -31,14 +31,15 @@ import org.locationtech.jts.geom.GeometryFactory;
 
 public class SoilServlet extends HttpServlet {
 
-    private SparkConnector sparkconnector;
+    // spark context
     private JavaSpatialSparkContext jssc;
 
+    // constructor
     public SoilServlet() {
         System.out.println("----initializing soil servlet");
 
         // get or create spark context
-        sparkconnector = SparkConnector.getInstance();
+        SparkConnector sparkconnector = SparkConnector.getInstance();
         jssc = new JavaSpatialSparkContext(sparkconnector.getSC());
     }
 
