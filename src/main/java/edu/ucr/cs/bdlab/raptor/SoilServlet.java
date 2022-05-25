@@ -1,9 +1,8 @@
 package edu.ucr.cs.bdlab.raptor;
 
 import java.io.IOException;
-
 import java.io.PrintWriter;
-import java.util.List; // lists
+import java.util.List;
 import java.util.Map;
 
 // jackson library to read/write json files
