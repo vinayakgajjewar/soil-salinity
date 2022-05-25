@@ -138,17 +138,13 @@ public class SoilServlet extends HttpServlet {
             // aggregate min results
             aggResults = join.mapToPair(v -> new Tuple2<>(v.feature(), v.m()))
                     .reduceByKey(Float::min)
-                    .mapToPair(fv -> {
-                        return new Tuple2<>(Long.toString(fv._1().getAs("OBJECTID")), fv._2());
-                    });
+                    .mapToPair(fv -> new Tuple2<>(Long.toString(fv._1().getAs("OBJECTID")), fv._2()));
         } else if (agg.equals("Maximum")) {
 
             // aggregate max results
             aggResults = join.mapToPair(v -> new Tuple2<>(v.feature(), v.m()))
                     .reduceByKey(Float::max)
-                    .mapToPair(fv -> {
-                        return new Tuple2<>(Long.toString(fv._1().getAs("OBJECTID")), fv._2());
-                    });
+                    .mapToPair(fv -> new Tuple2<>(Long.toString(fv._1().getAs("OBJECTID")), fv._2()));
         }
 
         // write results to json object
