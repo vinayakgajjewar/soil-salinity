@@ -111,12 +111,24 @@ public class SinglePolygonServlet extends HttpServlet {
         // write result to json object
         PrintWriter resWriter = response.getWriter();
         ObjectMapper mapper = new ObjectMapper();
-        // write results
+
+        // create query node
+        ObjectNode queryNode = mapper.createObjectNode();
+        queryNode.put("soildepth", soilDepth);
+        queryNode.put("layer", layer);
+
+        // create results node
+        ObjectNode resultsNode = mapper.createObjectNode();
+        resultsNode.put("min", singleMachineResults._1);
+        resultsNode.put("max", singleMachineResults._2);
+
+        // create root node
+        // contains queryNode and resultsNode
         ObjectNode rootNode = mapper.createObjectNode();
-        rootNode.put("soildepth", soilDepth);
-        rootNode.put("layer", layer);
-        rootNode.put("min", singleMachineResults._1);
-        rootNode.put("max", singleMachineResults._2);
+        rootNode.set("query", queryNode);
+        rootNode.set("results", resultsNode);
+
+        // write values to response writer
         String jsonString = mapper.writer().writeValueAsString(rootNode);
         resWriter.print(jsonString);
         resWriter.flush();
