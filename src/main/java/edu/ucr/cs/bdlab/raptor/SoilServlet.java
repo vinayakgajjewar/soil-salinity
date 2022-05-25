@@ -19,7 +19,6 @@ import edu.ucr.cs.bdlab.beast.JavaSpatialRDDHelper;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaPairRDD;
 
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -43,7 +42,7 @@ public class SoilServlet extends HttpServlet {
         jssc = new JavaSpatialSparkContext(sparkconnector.getSC());
     }
 
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
 
         // time at start of GET request
         long t1 = System.nanoTime();
