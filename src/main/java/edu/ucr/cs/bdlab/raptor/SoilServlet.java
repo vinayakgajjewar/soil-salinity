@@ -32,9 +32,8 @@ import org.locationtech.jts.geom.GeometryFactory;
 
 public class SoilServlet extends HttpServlet {
 
-    protected SparkConnector sparkconnector;
-
-    protected JavaSpatialSparkContext jssc;
+    private SparkConnector sparkconnector;
+    private JavaSpatialSparkContext jssc;
 
     public SoilServlet() {
         System.out.println("----initializing soil servlet");
