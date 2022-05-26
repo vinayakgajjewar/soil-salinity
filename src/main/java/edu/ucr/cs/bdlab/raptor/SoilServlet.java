@@ -23,6 +23,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import scala.Tuple2;
+import scala.Tuple7;
 
 import org.locationtech.jts.geom.Envelope;
 import org.locationtech.jts.geom.Geometry;
@@ -115,19 +116,28 @@ public class SoilServlet extends HttpServlet {
         // load raster and vector data
         JavaRDD<ITile> raster = jssc.geoTiff(rasterPath, 0, new BeastOptions());
         JavaRDD<IFeature> records = jssc.shapefile("data/shapefile/CA_farmland.zip");
+
+        System.out.println("----done reading records");
         
         // filter by map extents
         GeometryFactory geometryFactory = new GeometryFactory();
         Geometry extents = geometryFactory.toGeometry(new Envelope(minx, maxx, miny, maxy));
         // take 1000 records maximum
-        List<IFeature> filteredRecords = JavaSpatialRDDHelper.rangeQuery(records, extents).take(1000);
+        JavaRDD<IFeature> filteredRecords = JavaSpatialRDDHelper.rangeQuery(records, extents);
 
-        System.out.println("----done reading records");
+        // run single-machine raptor join operation
+        // TODO: get this code working
+        //JavaRDD<IFeature> filteredRecords = JavaSpatialRDDHelper.rangeQuery(records, extents);
+        //Geometry[] geomArray = filteredRecords.map(x -> x.getGeometry()).take(1000).toArray(new Geometry[1000]);
+        //Tuple7<Float, Float, Float, Float, Float, Integer, Float> singleMachineResults = SingleMachineRaptorJoin.join(rasterPath, geomArray);
+        //System.out.println("----single machine results");
+        //System.out.println("----min: " + singleMachineResults._1());
+        //System.out.println("----max: " + singleMachineResults._2());
 
         // run raptor join operation
         // TODO: convert to single machine join operation
         // TODO: write wrapper function
-        JavaRDD<RaptorJoinFeature<Float>> join = JavaSpatialRDDHelper.raptorJoin(jssc.parallelize(filteredRecords), raster, new BeastOptions());
+        JavaRDD<RaptorJoinFeature<Float>> join = JavaSpatialRDDHelper.raptorJoin(filteredRecords.sample(false, 0.001), raster, new BeastOptions());
 
         // aggregate results RDD
         JavaPairRDD<String, Float> aggResults = null;
@@ -193,6 +203,6 @@ public class SoilServlet extends HttpServlet {
         System.out.println("----GET request duration:");
         System.out.println((t2 - t1) * 1e-9);
         System.out.println("----records sent:");
-        System.out.println(filteredRecords.size());
+        //System.out.println(filteredRecords.size());
     }
 }
