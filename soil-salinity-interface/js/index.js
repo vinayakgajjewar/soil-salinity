@@ -102,8 +102,7 @@ function makeDynamicGETRequest(map) {
 
   // generate url with extents parameters
   // we use ol.proj.toLonLat() to convert from pixel coordinates to longitude/latitude
-  var url = baseURL + "?minx=" + ol.proj.toLonLat([minx, miny])[0] + "&miny=" + ol.proj.toLonLat([minx, miny])[1] +
-  \ "&maxx=" + ol.proj.toLonLat([maxx, maxy])[0] + "&maxy=" + ol.proj.toLonLat([maxx, maxy])[1];
+  var url = baseURL + "?minx=" + ol.proj.toLonLat([minx, miny])[0] + "&miny=" + ol.proj.toLonLat([minx, miny])[1] + "&maxx=" + ol.proj.toLonLat([maxx, maxy])[0] + "&maxy=" + ol.proj.toLonLat([maxx, maxy])[1];
   
   // add soil depth, layer, and aggregation parameters
   url = url + "&soildepth=" + soilDepth + "&layer=" + layer + "&agg=" + agg;
