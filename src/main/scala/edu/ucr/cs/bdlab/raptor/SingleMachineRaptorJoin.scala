@@ -64,14 +64,15 @@ object SingleMachineRaptorJoin {
   }
 
   // join function
-  def join(rasterPath: String, geom: Geometry): (java.lang.Float, java.lang.Float, java.lang.Float, java.lang.Float, java.lang.Float, java.lang.Integer, java.lang.Float) = {
-    geom.setSRID(3857)
+  def join(rasterPath: String, geomArray: Array[Geometry]): (java.lang.Float, java.lang.Float, java.lang.Float, java.lang.Float, java.lang.Float, java.lang.Integer, java.lang.Float) = {
+    //geom.setSRID(3857)
+    geomArray.foreach(x => x.setSRID(3857))
     val rasterFileNames: Array[String] = Array(rasterPath)
     val intersections: Array[Intersections] = rasterFileNames.map(rasterFileName => {
       val rasterFS: FileSystem = new Path(rasterFileName).getFileSystem(new Configuration())
       val rasterReader = RasterHelper.createRasterReader(rasterFS, new Path(rasterFileName), new BeastOptions(), new SparkConf())
       val intersections = new Intersections()
-      intersections.compute(Array(geom), rasterReader.metadata, new BeastOptions())
+      intersections.compute(geomArray, rasterReader.metadata, new BeastOptions())
       intersections
     })
     val intersectionIterator: Iterator[(scala.Long, PixelRange)] = new IntersectionsIterator(rasterFileNames.indices.toArray, intersections)
