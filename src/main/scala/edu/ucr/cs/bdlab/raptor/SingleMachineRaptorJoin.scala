@@ -16,13 +16,55 @@
 package edu.ucr.cs.bdlab.raptor
 
 import edu.ucr.cs.bdlab.beast.common.BeastOptions
+
 import org.apache.hadoop.conf.Configuration
 import org.apache.spark.SparkConf
 import org.apache.hadoop.fs.{FileSystem, Path}
+
 import org.locationtech.jts.geom.Geometry
 
+import scala.collection.mutable
+
 object SingleMachineRaptorJoin {
-  def join(rasterPath: String, geom: Geometry): (java.lang.Float, java.lang.Float) = {
+
+  // statistics function
+  def statistics(inputList: List[Float]): (java.lang.Float, java.lang.Float, java.lang.Float, java.lang.Float, java.lang.Float, java.lang.Integer, java.lang.Float) = {
+    var mode = new mutable.HashMap[Float, Int]()
+    var max = Float.NegativeInfinity
+    var min = Float.PositiveInfinity
+    var sum = (0).toFloat
+    for (j <- 0 until inputList.size) {
+      val value = inputList(j)
+      if (value > max)
+        max = value
+      if (value < min)
+        min = value
+      sum += value
+
+      if (mode.contains(value)) {
+        val x = mode.get(value).get
+        mode.getOrElseUpdate(value, x + 1)
+      }
+      else {
+        mode.put(value, 1)
+      }
+    }
+
+
+    val count = inputList.size
+    var median = Float.NegativeInfinity
+    if (count % 2 == 0) {
+      val l = count / 2 - 1
+      val r = l + 1
+      median = (inputList(l) + inputList(r)).toFloat / 2
+    } else
+      median = inputList(count / 2).toFloat
+
+    (max.asInstanceOf[java.lang.Float], min.asInstanceOf[java.lang.Float], median.asInstanceOf[java.lang.Float], sum.asInstanceOf[java.lang.Float], mutable.ListMap(mode.toSeq.sortWith(_._2 > _._2): _*).head._1.asInstanceOf[java.lang.Float], count.asInstanceOf[java.lang.Integer], (sum / count.toFloat).asInstanceOf[java.lang.Float])
+  }
+
+  // join function
+  def join(rasterPath: String, geom: Geometry): (java.lang.Float, java.lang.Float, java.lang.Float, java.lang.Float, java.lang.Float, java.lang.Integer, java.lang.Float) = {
     geom.setSRID(3857)
     val rasterFileNames: Array[String] = Array(rasterPath)
     val intersections: Array[Intersections] = rasterFileNames.map(rasterFileName => {
@@ -36,14 +78,16 @@ object SingleMachineRaptorJoin {
     // compute min
     val minIntersectionIterator: Iterator[(scala.Long, PixelRange)] = new IntersectionsIterator(rasterFileNames.indices.toArray, intersections)
     val minPixelIterator: Iterator[RaptorJoinResult[scala.Float]] = new PixelIterator(minIntersectionIterator, rasterFileNames, "0")
-    val min = minPixelIterator.map(x => x.m).min.asInstanceOf[java.lang.Float]
+    //val min = minPixelIterator.map(x => x.m).min.asInstanceOf[java.lang.Float]
+
+    statistics(minPixelIterator.map(x => x.m).toList)
 
     // compute max
-    val maxIntersectionIterator: Iterator[(scala.Long, PixelRange)] = new IntersectionsIterator(rasterFileNames.indices.toArray, intersections)
-    val maxPixelIterator: Iterator[RaptorJoinResult[scala.Float]] = new PixelIterator(maxIntersectionIterator, rasterFileNames, "0")
-    val max = maxPixelIterator.map(x => x.m).max.asInstanceOf[java.lang.Float]
+    //val maxIntersectionIterator: Iterator[(scala.Long, PixelRange)] = new IntersectionsIterator(rasterFileNames.indices.toArray, intersections)
+    //val maxPixelIterator: Iterator[RaptorJoinResult[scala.Float]] = new PixelIterator(maxIntersectionIterator, rasterFileNames, "0")
+    //val max = maxPixelIterator.map(x => x.m).max.asInstanceOf[java.lang.Float]
 
     // return statistics
-    (min, max)
+    //(min, max)
   }
 }
