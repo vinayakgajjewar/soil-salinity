@@ -101,9 +101,11 @@ public class SinglePolygonServlet extends HttpServlet {
             e.printStackTrace();
         }
 
+        Geometry[] geomArray = {geom};
+
         // now that we have a geometry object
         // call single machine raptor join
-        Tuple7<Float, Float, Float, Float, Float, Integer, Float> singleMachineResults = SingleMachineRaptorJoin.join(rasterPath, geom);
+        Tuple7<Float, Float, Float, Float, Float, Integer, Float> singleMachineResults = SingleMachineRaptorJoin.join(rasterPath, geomArray);
         System.out.println("----single machine results");
         System.out.println("----min: " + singleMachineResults._1());
         System.out.println("----max: " + singleMachineResults._2());
