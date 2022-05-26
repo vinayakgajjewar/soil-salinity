@@ -29,10 +29,10 @@ object SingleMachineRaptorJoin {
 
   // statistics function
   def statistics(inputList: List[Float]): (java.lang.Float, java.lang.Float, java.lang.Float, java.lang.Float, java.lang.Float, java.lang.Integer, java.lang.Float) = {
-    var mode = new mutable.HashMap[Float, Int]()
+    val mode = new mutable.HashMap[Float, Int]()
     var max = Float.NegativeInfinity
     var min = Float.PositiveInfinity
-    var sum = (0).toFloat
+    var sum = 0.toFloat
     for (j <- 0 until inputList.size) {
       val value = inputList(j)
       if (value > max)
@@ -56,9 +56,9 @@ object SingleMachineRaptorJoin {
     if (count % 2 == 0) {
       val l = count / 2 - 1
       val r = l + 1
-      median = (inputList(l) + inputList(r)).toFloat / 2
+      median = (inputList(l) + inputList(r)) / 2
     } else
-      median = inputList(count / 2).toFloat
+      median = inputList(count / 2)
 
     (max.asInstanceOf[java.lang.Float], min.asInstanceOf[java.lang.Float], median.asInstanceOf[java.lang.Float], sum.asInstanceOf[java.lang.Float], mutable.ListMap(mode.toSeq.sortWith(_._2 > _._2): _*).head._1.asInstanceOf[java.lang.Float], count.asInstanceOf[java.lang.Integer], (sum / count.toFloat).asInstanceOf[java.lang.Float])
   }
@@ -74,20 +74,10 @@ object SingleMachineRaptorJoin {
       intersections.compute(Array(geom), rasterReader.metadata, new BeastOptions())
       intersections
     })
-
-    // compute min
-    val minIntersectionIterator: Iterator[(scala.Long, PixelRange)] = new IntersectionsIterator(rasterFileNames.indices.toArray, intersections)
-    val minPixelIterator: Iterator[RaptorJoinResult[scala.Float]] = new PixelIterator(minIntersectionIterator, rasterFileNames, "0")
-    //val min = minPixelIterator.map(x => x.m).min.asInstanceOf[java.lang.Float]
-
-    statistics(minPixelIterator.map(x => x.m).toList)
-
-    // compute max
-    //val maxIntersectionIterator: Iterator[(scala.Long, PixelRange)] = new IntersectionsIterator(rasterFileNames.indices.toArray, intersections)
-    //val maxPixelIterator: Iterator[RaptorJoinResult[scala.Float]] = new PixelIterator(maxIntersectionIterator, rasterFileNames, "0")
-    //val max = maxPixelIterator.map(x => x.m).max.asInstanceOf[java.lang.Float]
+    val intersectionIterator: Iterator[(scala.Long, PixelRange)] = new IntersectionsIterator(rasterFileNames.indices.toArray, intersections)
+    val pixelIterator: Iterator[RaptorJoinResult[scala.Float]] = new PixelIterator(intersectionIterator, rasterFileNames, "0")
 
     // return statistics
-    //(min, max)
+    statistics(pixelIterator.map(x => x.m).toList)
   }
 }
