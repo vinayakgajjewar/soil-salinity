@@ -7,6 +7,7 @@ import java.util.Map;
 
 // jackson library to read/write json files
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import edu.ucr.cs.bdlab.beast.JavaSpatialSparkContext;
@@ -175,14 +176,17 @@ public class SoilServlet extends HttpServlet {
         queryNode.set("mbr", mbrNode);
 
         // create results node
-        ObjectNode resultsNode = mapper.createObjectNode();
+        ArrayNode resultsNode = mapper.createArrayNode();
 
         // populate json object with max vals
         System.out.println("County\tMax pH\n");
         assert aggResults != null;
         for (Map.Entry<String, Float> result : aggResults.collectAsMap().entrySet()) {
-            System.out.printf("%s\t%f\n", result.getKey(), result.getValue());
-            resultsNode.put(result.getKey(), result.getValue());
+            //System.out.printf("%s\t%f\n", result.getKey(), result.getValue());
+            ObjectNode resultNode = mapper.createObjectNode();
+            resultNode.put("objectid", result.getKey());
+            resultNode.put("value", result.getValue());
+            resultsNode.add(resultNode);
         }
 
         // create root node
