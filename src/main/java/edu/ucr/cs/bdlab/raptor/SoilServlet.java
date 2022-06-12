@@ -52,7 +52,6 @@ public class SoilServlet extends HttpServlet {
         float minx, miny, maxx, maxy;
         String soilDepth = "";
         String layer = "";
-        String agg = "";
 
         // wrap code in try-catch block to handle case where user accesses endpoint directly in browser
         try {
@@ -66,7 +65,6 @@ public class SoilServlet extends HttpServlet {
             // get sidebar select parameters
             soilDepth = request.getParameter("soildepth");
             layer = request.getParameter("layer");
-            agg = request.getParameter("agg");
 
             // print parameters
             System.out.println("----minx: " + minx);
@@ -75,7 +73,6 @@ public class SoilServlet extends HttpServlet {
             System.out.println("----maxy: " + maxy);
             System.out.println("----soildepth: " + soilDepth);
             System.out.println("----layer: " + layer);
-            System.out.println("----agg: " + agg);
 
         } catch (java.lang.NullPointerException e) {
 
@@ -142,20 +139,10 @@ public class SoilServlet extends HttpServlet {
 
         // aggregate results RDD
         JavaPairRDD<String, Float> aggResults = null;
-        // compute aggregate results based on selected aggregation
-        if (agg.equals("Minimum")) {
-
-            // aggregate min results
-            aggResults = join.mapToPair(v -> new Tuple2<>(v.feature(), v.m()))
-                    .reduceByKey(Float::min)
-                    .mapToPair(fv -> new Tuple2<>(Long.toString(fv._1().getAs("OBJECTID")), fv._2()));
-        } else if (agg.equals("Maximum")) {
-
-            // aggregate max results
-            aggResults = join.mapToPair(v -> new Tuple2<>(v.feature(), v.m()))
-                    .reduceByKey(Float::max)
-                    .mapToPair(fv -> new Tuple2<>(Long.toString(fv._1().getAs("OBJECTID")), fv._2()));
-        }
+        // aggregate max results
+        aggResults = join.mapToPair(v -> new Tuple2<>(v.feature(), v.m()))
+                .reduceByKey(Float::max)
+                .mapToPair(fv -> new Tuple2<>(Long.toString(fv._1().getAs("OBJECTID")), fv._2()));
 
         // write results to json object
         PrintWriter out = response.getWriter();
