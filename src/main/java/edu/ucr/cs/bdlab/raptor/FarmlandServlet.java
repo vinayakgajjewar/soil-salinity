@@ -116,8 +116,7 @@ public class FarmlandServlet extends HttpServlet {
         // filter by map extents
         GeometryFactory geometryFactory = new GeometryFactory();
         Geometry extents = geometryFactory.toGeometry(new Envelope(minx, maxx, miny, maxy));
-        // take 1000 records maximum
-        List<IFeature> filteredRecords = JavaSpatialRDDHelper.rangeQuery(records, extents).take(1000);
+        List<IFeature> filteredRecords = JavaSpatialRDDHelper.rangeQuery(records, extents).collect();
 
         System.out.println("----done reading records");
 

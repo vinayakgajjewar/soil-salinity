@@ -1,5 +1,7 @@
 package edu.ucr.cs.bdlab.raptor;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
@@ -8,10 +10,12 @@ import java.util.Base64;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.io.IOUtils;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.io.ParseException;
@@ -27,7 +31,7 @@ public class SinglePolygonServlet extends HttpServlet {
     }
 
     // post method
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
 
         // time at start of POST request
         long t1 = System.nanoTime();
@@ -40,10 +44,6 @@ public class SinglePolygonServlet extends HttpServlet {
         try {
             soilDepth = request.getParameter("soildepth");
             layer = request.getParameter("layer");
-
-            // print parameters
-            System.out.println("----soildepth: " + soilDepth);
-            System.out.println("----layer: " + layer);
         } catch (java.lang.NullPointerException e) {
 
             // print error if we can't get parameters
@@ -73,31 +73,34 @@ public class SinglePolygonServlet extends HttpServlet {
             case "15-30":
                 rasterPath = rasterPath.concat("15_30_compressed/");
                 break;
+            case "30-60":
+                rasterPath = rasterPath.concat("30_60_compressed/");
+                break;
+            case "60-100":
+                rasterPath = rasterPath.concat("60_100_compressed/");
+                break;
+            case "100-200":
+                rasterPath = rasterPath.concat("100_200_compressed/");
+                break;
         }
         rasterPath = rasterPath.concat(layer + ".tif");
-        System.out.println("----raster path=" + rasterPath);
-
-        System.out.println("----POST SinglePolygonServlet");
-        String encodedData = request.getReader().readLine();
-        //System.out.println(encodedData);
-        System.out.println("----decoded data:");
-        byte[] decodedBytes = Base64.getDecoder().decode(encodedData.getBytes());
-        String decodedString = new String(decodedBytes, StandardCharsets.UTF_8);
-        //System.out.println(decodedString);
-
-        // get inner geometry object
-        String geomString = decodedString.substring(29).split(",\"properties\"")[0];
-        System.out.println(geomString);
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ServletInputStream input = request.getInputStream();
+        IOUtils.copy(input, baos);
+        input.close();
+        baos.close();
 
         // initialize geojson reader
         GeoJsonReader reader = new GeoJsonReader(new GeometryFactory());
 
         // try reading the geojson string into a geometry object
         Geometry geom = null;
+        String geometryGeoJSON = baos.toString();
         try {
-            geom = reader.read(geomString);
+            geom = reader.read(geometryGeoJSON);
+            geom.setSRID(4326);
         } catch (ParseException e) {
-            System.err.println("----ERROR: could not parse geojson string");
+            System.err.println("----ERROR: could not parse geojson string "+geometryGeoJSON);
             e.printStackTrace();
         }
 
@@ -106,9 +109,6 @@ public class SinglePolygonServlet extends HttpServlet {
         // now that we have a geometry object
         // call single machine raptor join
         Tuple7<Float, Float, Float, Float, Float, Integer, Float> singleMachineResults = SingleMachineRaptorJoin.join(rasterPath, geomArray);
-        System.out.println("----single machine results");
-        System.out.println("----min: " + singleMachineResults._1());
-        System.out.println("----max: " + singleMachineResults._2());
 
         // write result to json object
         PrintWriter resWriter = response.getWriter();
@@ -121,13 +121,15 @@ public class SinglePolygonServlet extends HttpServlet {
 
         // create results node
         ObjectNode resultsNode = mapper.createObjectNode();
-        resultsNode.put("max", singleMachineResults._1());
-        resultsNode.put("min", singleMachineResults._2());
-        resultsNode.put("sum", singleMachineResults._3());
-        resultsNode.put("median", singleMachineResults._4());
-        resultsNode.put("stddev", singleMachineResults._5());
-        resultsNode.put("count", singleMachineResults._6());
-        resultsNode.put("mean", singleMachineResults._7());
+        if (singleMachineResults != null) {
+            resultsNode.put("max", singleMachineResults._1());
+            resultsNode.put("min", singleMachineResults._2());
+            resultsNode.put("sum", singleMachineResults._3());
+            resultsNode.put("median", singleMachineResults._4());
+            resultsNode.put("stddev", singleMachineResults._5());
+            resultsNode.put("count", singleMachineResults._6());
+            resultsNode.put("mean", singleMachineResults._7());
+        }
 
         // create root node
         // contains queryNode and resultsNode
