@@ -31,7 +31,7 @@ import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.GeometryFactory;
 
 /**
- * Computes soil statistics for all Farmland geometries defined in a specific region.
+ * Computes soil statistics for all Farmlands defined in a specific region.
  */
 public class SoilServlet extends HttpServlet {
 
