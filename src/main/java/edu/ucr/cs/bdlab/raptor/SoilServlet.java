@@ -30,6 +30,9 @@ import org.locationtech.jts.geom.Envelope;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.GeometryFactory;
 
+/**
+ * Computes soil statistics for all Farmland geometries defined in a specific region.
+ */
 public class SoilServlet extends HttpServlet {
 
     // spark context
@@ -106,6 +109,15 @@ public class SoilServlet extends HttpServlet {
                 break;
             case "15-30":
                 rasterPath = rasterPath.concat("15_30_compressed/");
+                break;
+            case "30-60":
+                rasterPath = rasterPath.concat("30_60_compressed/");
+                break;
+            case "60-100":
+                rasterPath = rasterPath.concat("60_100_compressed/");
+                break;
+            case "100-200":
+                rasterPath = rasterPath.concat("100_200_compressed/");
                 break;
         }
         rasterPath = rasterPath.concat(layer + ".tif");

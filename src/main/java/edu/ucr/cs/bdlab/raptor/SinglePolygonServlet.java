@@ -1,28 +1,25 @@
 package edu.ucr.cs.bdlab.raptor;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-
-import javax.servlet.ServletInputStream;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.apache.commons.io.IOUtils;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.io.ParseException;
 import org.locationtech.jts.io.geojson.GeoJsonReader;
-
 import scala.Tuple7;
 
+import javax.servlet.ServletInputStream;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.PrintWriter;
+
+/**
+ * Computes soil statistics for a single polygon defined in GeoJSON format.
+ */
 public class SinglePolygonServlet extends HttpServlet {
 
     // constructor
@@ -31,6 +28,12 @@ public class SinglePolygonServlet extends HttpServlet {
     }
 
     // post method
+    // An alias to the get method for browsers and SDKs that do not support a payload in the GET request, e.g., iPhone
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        doGet(request, response);
+    }
+
+    // get method
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
 
         // time at start of POST request
