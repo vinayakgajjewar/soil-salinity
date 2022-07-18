@@ -49,7 +49,6 @@ public class TileServlet extends HttpServlet {
 
   // constructor
   public TileServlet() {
-    System.err.println("Tile servlent");
     // get or create spark context
     SparkConnector sparkconnector = SparkConnector.getInstance();
     jssc = new JavaSpatialSparkContext(sparkconnector.getSC());
@@ -65,11 +64,15 @@ public class TileServlet extends HttpServlet {
     // otherwise, the front-end won't be able to make GET requests to this server because of CORS policy
     response.addHeader("Access-Control-Allow-Origin", "*");
 
+    // Locate the image name
+    String path = request.getServletPath();
+    if (!path.contains("tile-")) {
+      response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+      return;
+    }
     // Set the response type to png
     response.setContentType("image/png");
     response.setStatus(HttpServletResponse.SC_OK);
-    // Locate the image name
-    String path = request.getPathInfo();
     String tileFileName = path.substring(path.indexOf("tile-"));
     Path vizIndexPath = new Path("data/CA_farmland/CA_farmland_viz");
     // Check if the file already exists, i.e., pre-rendered

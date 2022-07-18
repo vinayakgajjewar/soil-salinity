@@ -38,7 +38,7 @@
   </servlet-mapping>
   <servlet-mapping>
     <servlet-name>TileServlet</servlet-name>
-    <url-pattern>/vectors/farmland/tile-0-0-0.png</url-pattern>
+    <url-pattern>*.png</url-pattern>
   </servlet-mapping>
 
 </web-app>
