@@ -22,11 +22,6 @@ import java.io.PrintWriter;
  */
 public class SinglePolygonServlet extends HttpServlet {
 
-    // constructor
-    public SinglePolygonServlet() {
-        System.out.println("----initializing single polygon servlet");
-    }
-
     // post method
     // An alias to the get method for browsers and SDKs that do not support a payload in the GET request, e.g., iPhone
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
