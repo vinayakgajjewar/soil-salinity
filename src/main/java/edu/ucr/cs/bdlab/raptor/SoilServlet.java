@@ -46,8 +46,18 @@ import scala.collection.Iterator;
 public class SoilServlet extends HttpServlet {
     Configuration hadoopConf = new Configuration();
 
-    private static final Map<String, String> rasterFiles;
+    static boolean rangeOverlap(String r1, String r2) {
+        String[] parts1 = r1.split("-");
+        int begin1 = Integer.parseInt(parts1[0]);
+        int end1 = Integer.parseInt(parts1[1]);
+        String[] parts2 = r2.split("-");
+        int begin2 = Integer.parseInt(parts2[0]);
+        int end2 = Integer.parseInt(parts2[1]);
+        // Treat both ranges as begin-inclusive and end-exclusive
+        return !(begin1 >= end2 || begin2 >= end1);
+    }
 
+    static final Map<String, String> rasterFiles;
     static {
         rasterFiles = new HashMap<>();
         rasterFiles.put("0-5", "0_5_compressed");
@@ -61,7 +71,6 @@ public class SoilServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
         // time at start of GET request
         long t1 = System.nanoTime();
-
 
         // we set content-type as application/geo+json
         // not application/json
@@ -112,17 +121,26 @@ public class SoilServlet extends HttpServlet {
         System.out.printf("Read %d records in %f seconds\n", farmlands.size(), (System.nanoTime() - t1) * 1E-9);
 
         // load raster data based on selected soil depth and layer
-        String rasterFile = "data/tif/";
-        rasterFile += rasterFiles.get(soilDepth)+"/";
-        rasterFile += layer + ".tif";
-        System.out.println("----raster path=" + rasterFile);
+        List<String> matchingRasterFiles = new ArrayList<>();
+        for (Map.Entry<String, String> rasterFile : rasterFiles.entrySet()) {
+            if (rangeOverlap(rasterFile.getKey(), soilDepth))
+                matchingRasterFiles.add(String.format("data/tif/%s/%s.tif", rasterFile.getValue(), layer));
+        }
 
         // Load raster data
+        Collector[] finalResults = null;
         GeoTiffReader<Float> rasterReader = new GeoTiffReader<>();
-        rasterReader.initialize(fs, rasterFile, "0", opts, null);
-
-        Collector[] stats = ZonalStatistics.zonalStatsLocal(farmlands.toArray(new IFeature[0]), rasterReader,
-            SoilStatistics.class);
+        for (String matchingRasterFile : matchingRasterFiles) {
+            rasterReader.initialize(fs, matchingRasterFile, "0", opts, null);
+            Collector[] stats = ZonalStatistics.zonalStatsLocal(farmlands.toArray(new IFeature[0]), rasterReader,
+                SoilStatistics.class);
+            if (finalResults == null) {
+                finalResults = stats;
+            } else {
+                for (int i = 0; i < finalResults.length; i++)
+                    finalResults[i].accumulate(stats[i]);
+            }
+        }
 
         // write results to json object
         PrintWriter out = response.getWriter();
@@ -148,8 +166,8 @@ public class SoilServlet extends HttpServlet {
         ArrayNode resultsNode = mapper.createArrayNode();
 
         // populate json object with max vals
-        for (int i = 0; i < stats.length; i++) {
-            SoilStatistics s = (SoilStatistics) stats[i];
+        for (int i = 0; i < finalResults.length; i++) {
+            SoilStatistics s = (SoilStatistics) finalResults[i];
             if (s != null) {
                 ObjectNode resultNode = mapper.createObjectNode();
                 resultNode.put("objectid", ((Number) farmlands.get(i).getAs("OBJECTID")).longValue());

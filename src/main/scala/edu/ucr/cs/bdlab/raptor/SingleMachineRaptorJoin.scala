@@ -63,10 +63,7 @@ object SingleMachineRaptorJoin {
     (max.asInstanceOf[java.lang.Float], min.asInstanceOf[java.lang.Float], median.asInstanceOf[java.lang.Float], sum.asInstanceOf[java.lang.Float], mutable.ListMap(mode.toSeq.sortWith(_._2 > _._2): _*).head._1.asInstanceOf[java.lang.Float], count.asInstanceOf[java.lang.Integer], (sum / count.toFloat).asInstanceOf[java.lang.Float])
   }
 
-  // join function
-  def join(rasterPath: String, geomArray: Array[Geometry]): (java.lang.Float, java.lang.Float, java.lang.Float, java.lang.Float, java.lang.Float, java.lang.Integer, java.lang.Float) = {
-    //geom.setSRID(3857)
-    val rasterFileNames: Array[String] = Array(rasterPath)
+  def join(rasterFileNames: Array[String], geomArray: Array[Geometry]): (java.lang.Float, java.lang.Float, java.lang.Float, java.lang.Float, java.lang.Float, java.lang.Integer, java.lang.Float) = {
     val intersections: Array[(Int, Intersections)] = rasterFileNames.zipWithIndex.map( {case (rasterFileName: String, index: Int) =>
       val rasterFS: FileSystem = new Path(rasterFileName).getFileSystem(new Configuration())
       val rasterReader = RasterHelper.createRasterReader(rasterFS, new Path(rasterFileName), new BeastOptions(), new SparkConf())
@@ -82,4 +79,9 @@ object SingleMachineRaptorJoin {
     // return statistics
     statistics(pixelIterator.map(x => x.m).toList)
   }
+
+  // join function
+  def join(rasterPath: String, geomArray: Array[Geometry]): (java.lang.Float, java.lang.Float, java.lang.Float, java.lang.Float, java.lang.Float, java.lang.Integer, java.lang.Float) =
+    join(Array(rasterPath), geomArray)
+
 }

@@ -16,6 +16,9 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Computes soil statistics for a single polygon defined in GeoJSON format.
@@ -57,31 +60,13 @@ public class SinglePolygonServlet extends HttpServlet {
         // because of CORS policy
         response.addHeader("Access-Control-Allow-Origin", "*");
 
-        // load raster data based on layer and soil depth
-        String rasterPath = "data/tif/";
-
-        // select soil depth
-        switch (soilDepth) {
-            case "0-5":
-                rasterPath = rasterPath.concat("0_5_compressed/");
-                break;
-            case "5-15":
-                rasterPath = rasterPath.concat("5_15_compressed/");
-                break;
-            case "15-30":
-                rasterPath = rasterPath.concat("15_30_compressed/");
-                break;
-            case "30-60":
-                rasterPath = rasterPath.concat("30_60_compressed/");
-                break;
-            case "60-100":
-                rasterPath = rasterPath.concat("60_100_compressed/");
-                break;
-            case "100-200":
-                rasterPath = rasterPath.concat("100_200_compressed/");
-                break;
+        // load raster data based on selected soil depth and layer
+        List<String> matchingRasterFiles = new ArrayList<>();
+        for (Map.Entry<String, String> rasterFile : SoilServlet.rasterFiles.entrySet()) {
+            if (SoilServlet.rangeOverlap(rasterFile.getKey(), soilDepth))
+                matchingRasterFiles.add(String.format("data/tif/%s/%s.tif", rasterFile.getValue(), layer));
         }
-        rasterPath = rasterPath.concat(layer + ".tif");
+
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         ServletInputStream input = request.getInputStream();
         IOUtils.copy(input, baos);
@@ -106,7 +91,8 @@ public class SinglePolygonServlet extends HttpServlet {
 
         // now that we have a geometry object
         // call single machine raptor join
-        Tuple7<Float, Float, Float, Float, Float, Integer, Float> singleMachineResults = SingleMachineRaptorJoin.join(rasterPath, geomArray);
+        Tuple7<Float, Float, Float, Float, Float, Integer, Float> singleMachineResults =
+            SingleMachineRaptorJoin.join(matchingRasterFiles.toArray(new String[0]), geomArray);
 
         // write result to json object
         PrintWriter resWriter = response.getWriter();
