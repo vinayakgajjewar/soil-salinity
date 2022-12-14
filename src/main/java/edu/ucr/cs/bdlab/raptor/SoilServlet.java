@@ -137,8 +137,12 @@ public class SoilServlet extends HttpServlet {
             if (finalResults == null) {
                 finalResults = stats;
             } else {
-                for (int i = 0; i < finalResults.length; i++)
-                    finalResults[i].accumulate(stats[i]);
+                for (int i = 0; i < finalResults.length; i++) {
+                    if (finalResults[i] == null)
+                        finalResults[i] = stats[i];
+                    else if (stats[i] != null)
+                        finalResults[i].accumulate(stats[i]);
+                }
             }
         }
 

@@ -1,5 +1,5 @@
 # FutureFarmNow API Documentation
-Version: 0.1.1-SNAPSHOT
+Version: 0.2-RC1
 
 All the following end-points are hosted under the URL `https://raptor.cs.ucr.edu/futurefarmnow-backend-<VERSION>`. The current version is shown at the top of this document. All the following endpoints should be preceded with the base URL given above.
 
@@ -21,9 +21,7 @@ Note: if MBR is not specified, the whole dataset will be returned as GeoJSON.
 
 ### Examples
 #### URL
-```url
-http://raptor.cs.ucr.edu/futurefarmnow-backend-0.1.1-SNAPSHOT/vectors/farmland.geojson?minx=-120.1&miny=40&maxx=-120&maxy=40.01
-```
+<http://raptor.cs.ucr.edu/futurefarmnow-backend-0.2-RC1/vectors/farmland.geojson?minx=-120.1&miny=40&maxx=-120&maxy=40.01>
 
 #### Response
 ```json
@@ -55,15 +53,13 @@ http://raptor.cs.ucr.edu/futurefarmnow-backend-0.1.1-SNAPSHOT/vectors/farmland.g
 
 | Description | Retrieves a tile visualization for the entire Farmland dataset. |
 |-------------|-----------------------------------------------------------------|
-| Endpoint    | /vectors/farmland/tile-z-x-y.png                                |
+| Endpoint    | `/vectors/farmland/tile-z-x-y.png`                              |
 | HTTP method | GET                                                             |
 | Since       | 0.1.1                                                           |
 
 ### Examples
 #### URL
-```url
-http://raptor.cs.ucr.edu/futurefarmnow-backend-<VERSION>/vectors/farmland/tile-1-0-0.png
-```
+<http://raptor.cs.ucr.edu/futurefarmnow-backend-0.2-RC1/vectors/farmland/tile-1-0-0.png>
 
 #### Response
 ![Tile 1,0,0](tile-1-0-0.png)
@@ -72,17 +68,23 @@ http://raptor.cs.ucr.edu/futurefarmnow-backend-<VERSION>/vectors/farmland/tile-1
 
 | Description  | Get soil statistics for a single farmland defined by GeoJSON. The output is in JSON format. |
 |--------------|---------------------------------------------------------------------------------------------|
-| Endpoint     | /soil/singlepolygon.json                                                                    |
+| Endpoint     | `/soil/singlepolygon.json`                                                                  |
 | HTTP method  | GET/POST                                                                                    |
 | POST payload | GeoJSON geometry object                                                                     |
-### Note
-GET is the preferred HTTP method for this service since it does not modify the state of the server and its caching will be handled better by the client. However, since some SDKs do not support a payload for GET requests, the POST method is also supported for compatibility.
+
+| Parameter | Required? | How to use                                                                                                           | Description                           |
+|-----------|-----------|----------------------------------------------------------------------------------------------------------------------|---------------------------------------|
+| soildepth | Required  | ?soildepth=from-to                                                                                                   | Soil depth on which to run statistics |
+| layer     | Required  | Accepted values: "alpha", "bd", "clay", "hb", "ksat", "lambda", "n", "om", "ph", "sand", "silt","theta_r", "theta_s" | Soil parameter to consider            |
+
+*Note*: GET is the preferred HTTP method for this service since it does not modify the state of the server and its caching will be handled better by the client. However, since some SDKs do not support a payload for GET requests, the POST method is also supported for compatibility.
+
+*Note*: The parameter `soildepth` is provided as a range in the format `from-to`.
+Currently, the accepted values for from and to are {0, 5, 15, 30, 60, 100, 200} and `from` must be less than `to`.
 
 ### Examples
 #### URL
-```url
-https://raptor.cs.ucr.edu/futurefarmnow-backend-0.1/soil/singlepolygon.json?soildepth=0-5&layer=lambda
-```
+<https://raptor.cs.ucr.edu/futurefarmnow-backend-0.2-RC1/soil/singlepolygon.json?soildepth=0-5&layer=lambda>
 
 #### GET/POST payload
 ```json
@@ -94,7 +96,7 @@ https://raptor.cs.ucr.edu/futurefarmnow-backend-0.1/soil/singlepolygon.json?soil
 cat > test.geojson
 {"type" : "Polygon",  "coordinates" : [ [ [ -120.11975251694177, 36.90564006418889 ], [ -120.12409234994458, 36.90565751854381 ], [ -120.12406217104261, 36.90824957916899 ], [ -120.12410082465097, 36.90918197014845 ], [ -120.12405123315573, 36.90918899854245 ], [ -120.11974725371255, 36.9091820470047 ], [ -120.11975251694177, 36.90564006418889 ] ] ]  }
 ^D
-curl -X GET http://raptor.cs.ucr.edu/futurefarmnow-backend-0.1/soil/singlepolygon.json?soildepth=0-5\&layer=lambda -H "Content-Type: application/geo+json" -d @test.geojson
+curl -X GET http://raptor.cs.ucr.edu/futurefarmnow-backend-0.2-RC1/soil/singlepolygon.json?soildepth=0-5\&layer=lambda -H "Content-Type: application/geo+json" -d @test.geojson
 ```
 
 #### Response
@@ -114,14 +116,15 @@ curl -X GET http://raptor.cs.ucr.edu/futurefarmnow-backend-0.1/soil/singlepolygo
 | miny      | Optional  | ?miny=                                                                                                               | South edge latitude value            |
 | maxx      | Optional  | ?maxx=                                                                                                               | East edge longitude value            |
 | maxy      | Optional  | ?maxy=                                                                                                               | North edge latitude value            |
-| soildepth | Required  | Accepted values: "0-5", "5-15", "15-30", "30-60", "60-100", "100-200"                                                | Soil depth to compute statistics for |
+| soildepth | Required  | from-to                                                                                                              | Soil depth to compute statistics for |
 | layer     | Required  | Accepted values: "alpha", "bd", "clay", "hb", "ksat", "lambda", "n", "om", "ph", "sand", "silt","theta_r", "theta_s" | Soil parameter to consider           |
+
+*Note*: The parameter `soildepth` is provided as a range in the format `from-to`.
+Currently, the accepted values for from and to are {0, 5, 15, 30, 60, 100, 200} and `from` must be less than `to`.
 
 ### Examples
 #### URL
-```
-http://raptor.cs.ucr.edu/futurefarmnow-backend-0.1.1-SNAPSHOT/soil/farmland.json?minx=-127.8&miny=29.8&maxx=-115.6&maxy=33.7&soildepth=0-5&layer=ph
-```
+<http://raptor.cs.ucr.edu/futurefarmnow-backend-0.2-RC1/soil/farmland.json?minx=-127.8&miny=29.8&maxx=-115.6&maxy=33.7&soildepth=0-5&layer=ph>
 
 #### Response
 ```json

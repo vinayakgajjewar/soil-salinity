@@ -28,6 +28,9 @@ Use the command `mvn clean package` to generate a WAR file in the `target/` dire
 The file should be named `raptor-backend-0.1-SNAPSHOT.war`.
 To deploy this generated WAR file, simply copy it to the `webapps/` folder of your Apache Tomcat installation directory.
 
+### API
+Check the detailed [API description here](api.md).
+
 ## License
 
 Copyright 2021 University of California, Riverside

@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>edu.ucr.cs.bdlab.raptor</groupId>
     <artifactId>futurefarmnow-backend</artifactId>
-    <version>0.1.1-SNAPSHOT</version>
+    <version>0.2-RC1</version>
     <packaging>war</packaging>
     <name>FutureFarmNow Backend</name>
     <properties>
@@ -30,7 +30,7 @@
         <dependency>
             <groupId>edu.ucr.cs.bdlab</groupId>
             <artifactId>beast-spark</artifactId>
-            <version>0.9.5-RC2</version>
+            <version>0.9.5</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
