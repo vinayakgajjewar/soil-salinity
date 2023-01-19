@@ -50,7 +50,6 @@ object SingleMachineRaptorJoin {
       }
     }
 
-
     val count = inputList.size
     var median = Float.NegativeInfinity
     if (count % 2 == 0) {
@@ -77,7 +76,7 @@ object SingleMachineRaptorJoin {
     val pixelIterator: Iterator[RaptorJoinResult[scala.Float]] = new PixelIterator(intersectionIterator, rasterFileNames, "0")
 
     // return statistics
-    statistics(pixelIterator.map(x => x.m).toList)
+    statistics(pixelIterator.map(x => x.m).filterNot(_ == -9999).toList)
   }
 
   // join function
