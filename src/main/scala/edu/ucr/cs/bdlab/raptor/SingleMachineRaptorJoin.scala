@@ -27,42 +27,50 @@ import scala.collection.mutable
 
 object SingleMachineRaptorJoin {
 
-  // statistics function
-  def statistics(inputList: List[Float]): (java.lang.Float, java.lang.Float, java.lang.Float, java.lang.Float, java.lang.Float, java.lang.Integer, java.lang.Float) = {
-    val mode = new mutable.HashMap[Float, Int]()
-    var max = Float.NegativeInfinity
-    var min = Float.PositiveInfinity
-    var sum = 0.toFloat
-    for (j <- 0 until inputList.size) {
-      val value = inputList(j)
-      if (value > max)
-        max = value
-      if (value < min)
-        min = value
-      sum += value
-
-      if (mode.contains(value)) {
-        val x = mode.get(value).get
-        mode.getOrElseUpdate(value, x + 1)
-      }
-      else {
-        mode.put(value, 1)
-      }
-    }
-
-    val count = inputList.size
-    var median = Float.NegativeInfinity
-    if (count % 2 == 0) {
+  /**
+   * Compute the desired statistics for the given list of values. The computed statistics are (in order):
+   *
+   *  - maximum
+   *  - minimum
+   *  - median
+   *  - sum
+   *  - mode
+   *  - stddev
+   *  - count
+   *  - average (mean)
+   *
+   * @param inputList the list of values ot compute the statistics for
+   * @return
+   */
+  def statistics(inputList: List[Float]): (java.lang.Float, java.lang.Float, java.lang.Float, java.lang.Float, java.lang.Float, java.lang.Float, java.lang.Integer, java.lang.Float) = {
+    val sortedValues: Array[Float] = inputList.sorted.toArray
+    val min: Float = sortedValues(0)
+    val max: Float = sortedValues(sortedValues.length - 1)
+    val sum: Float = sortedValues.sum
+    val mode: Float = sortedValues.groupBy(x => x).toArray.map(x => (x._2.length, x._1)).max._2
+    val count: Int = sortedValues.length
+    val mean: Float = sum / count
+    val stdev: Float = sortedValues.map(x => (x - mean).abs).sum / count
+    val median: Float = if (count % 2 == 0) {
       val l = count / 2 - 1
       val r = l + 1
-      median = (inputList(l) + inputList(r)) / 2
-    } else
-      median = inputList(count / 2)
+      (sortedValues(l) + sortedValues(r)) / 2
+    } else {
+      sortedValues(count / 2)
+    }
 
-    (max.asInstanceOf[java.lang.Float], min.asInstanceOf[java.lang.Float], median.asInstanceOf[java.lang.Float], sum.asInstanceOf[java.lang.Float], mutable.ListMap(mode.toSeq.sortWith(_._2 > _._2): _*).head._1.asInstanceOf[java.lang.Float], count.asInstanceOf[java.lang.Integer], (sum / count.toFloat).asInstanceOf[java.lang.Float])
+    ( max.asInstanceOf[java.lang.Float],
+      min.asInstanceOf[java.lang.Float],
+      median.asInstanceOf[java.lang.Float],
+      sum.asInstanceOf[java.lang.Float],
+      mode.asInstanceOf[java.lang.Float],
+      stdev.asInstanceOf[java.lang.Float],
+      count.asInstanceOf[java.lang.Integer],
+      mean.asInstanceOf[java.lang.Float])
   }
 
-  def join(rasterFileNames: Array[String], geomArray: Array[Geometry]): (java.lang.Float, java.lang.Float, java.lang.Float, java.lang.Float, java.lang.Float, java.lang.Integer, java.lang.Float) = {
+  def join(rasterFileNames: Array[String], geomArray: Array[Geometry]):
+    (java.lang.Float, java.lang.Float, java.lang.Float, java.lang.Float, java.lang.Float, java.lang.Float, java.lang.Integer, java.lang.Float) = {
     val intersections: Array[(Int, Intersections)] = rasterFileNames.zipWithIndex.map( {case (rasterFileName: String, index: Int) =>
       val rasterFS: FileSystem = new Path(rasterFileName).getFileSystem(new Configuration())
       val rasterReader = RasterHelper.createRasterReader(rasterFS, new Path(rasterFileName), new BeastOptions(), new SparkConf())
@@ -80,7 +88,8 @@ object SingleMachineRaptorJoin {
   }
 
   // join function
-  def join(rasterPath: String, geomArray: Array[Geometry]): (java.lang.Float, java.lang.Float, java.lang.Float, java.lang.Float, java.lang.Float, java.lang.Integer, java.lang.Float) =
+  def join(rasterPath: String, geomArray: Array[Geometry]):
+    (java.lang.Float, java.lang.Float, java.lang.Float, java.lang.Float, java.lang.Float, java.lang.Float, java.lang.Integer, java.lang.Float) =
     join(Array(rasterPath), geomArray)
 
 }

@@ -7,7 +7,7 @@ import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.io.ParseException;
 import org.locationtech.jts.io.geojson.GeoJsonReader;
-import scala.Tuple7;
+import scala.Tuple8;
 
 import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServlet;
@@ -91,7 +91,7 @@ public class SinglePolygonServlet extends HttpServlet {
 
         // now that we have a geometry object
         // call single machine raptor join
-        Tuple7<Float, Float, Float, Float, Float, Integer, Float> singleMachineResults =
+        Tuple8<Float, Float, Float, Float, Float, Float, Integer, Float> singleMachineResults =
             SingleMachineRaptorJoin.join(matchingRasterFiles.toArray(new String[0]), geomArray);
 
         // write result to json object
@@ -108,11 +108,12 @@ public class SinglePolygonServlet extends HttpServlet {
         if (singleMachineResults != null) {
             resultsNode.put("max", singleMachineResults._1());
             resultsNode.put("min", singleMachineResults._2());
-            resultsNode.put("sum", singleMachineResults._3());
-            resultsNode.put("median", singleMachineResults._4());
-            resultsNode.put("stddev", singleMachineResults._5());
-            resultsNode.put("count", singleMachineResults._6());
-            resultsNode.put("mean", singleMachineResults._7());
+            resultsNode.put("median", singleMachineResults._3());
+            resultsNode.put("sum", singleMachineResults._4());
+            resultsNode.put("mode", singleMachineResults._5());
+            resultsNode.put("stddev", singleMachineResults._6());
+            resultsNode.put("count", singleMachineResults._7());
+            resultsNode.put("mean", singleMachineResults._8());
         }
 
         // create root node
