@@ -7,8 +7,10 @@ import edu.ucr.cs.bdlab.raptor.SingleMachineRaptorJoin;
 
 import java.io.IOException;
 
+import java.util.Enumeration;
 import java.util.List; // lists
 import java.util.Map;
+import java.util.zip.GZIPOutputStream;
 
 import edu.ucr.cs.bdlab.beast.io.GeoJSONFeatureWriter;
 import edu.ucr.cs.bdlab.beast.JavaSpatialSparkContext;
@@ -44,10 +46,14 @@ public class FarmlandServlet extends HttpServlet {
         // time at start of GET request
         long t1 = System.nanoTime();
 
+        boolean gzipResponse = isGZIPAcceptable(request);
+
         // we set content-type as application/geo+json
         // not application/json
         response.setContentType("application/geo+json");
         response.setStatus(HttpServletResponse.SC_OK);
+        if (gzipResponse)
+            response.setHeader("Content-Encoding", "gzip");
 
         // set Access-Control-Allow-Origin
         // otherwise, the front-end won't be able to make GET requests to this server because of CORS policy
@@ -76,8 +82,7 @@ public class FarmlandServlet extends HttpServlet {
         // try writing out a record
         int numRecords = 0;
         try (GeoJSONFeatureWriter writer = new GeoJSONFeatureWriter()) {
-            //writer.initialize(new GZIPOutputStream(response.getOutputStream()), new Configuration());
-            writer.initialize(response.getOutputStream(), new Configuration());
+            writer.initialize(gzipResponse? new GZIPOutputStream(response.getOutputStream()) : response.getOutputStream(), new Configuration());
             for (IFeature feature : reader) {
                 writer.write(feature);
                 numRecords++;
@@ -92,5 +97,16 @@ public class FarmlandServlet extends HttpServlet {
 
         // print out statistics
         System.out.printf("Farmland request wrote %d records in %f seconds\n", numRecords, (t2 - t1) * 1e-9);
+    }
+
+    public static boolean isGZIPAcceptable(HttpServletRequest request) {
+        boolean serverAcceptGZIP = false;
+        Enumeration serverAccepts = request.getHeaders("Accept-Encoding");
+        while (serverAccepts.hasMoreElements()) {
+            String serverAccept = (String) serverAccepts.nextElement();
+            if (serverAccept.toLowerCase().contains("gzip"))
+                serverAcceptGZIP = true;
+        }
+        return serverAcceptGZIP;
     }
 }
