@@ -3,11 +3,11 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>edu.ucr.cs.bdlab.raptor</groupId>
     <artifactId>futurefarmnow-backend</artifactId>
-    <version>0.1-SNAPSHOT</version>
+    <version>0.2-SNAPSHOT</version>
     <packaging>war</packaging>
     <name>FutureFarmNow Backend</name>
     <properties>
-        <jettyVersion>9.3.24.v20180605</jettyVersion>
+        <jettyVersion>9.4.48.v20220622</jettyVersion>
         <scala.version>2.12.7</scala.version>
         <!--https://stackoverflow.com/questions/53034953/error-source-option-5-is-no-longer-supported-use-6-or-later-on-maven-compile-->
         <maven.compiler.source>1.8</maven.compiler.source>
@@ -30,7 +30,7 @@
         <dependency>
             <groupId>edu.ucr.cs.bdlab</groupId>
             <artifactId>beast-spark</artifactId>
-            <version>0.9.4-RC2</version>
+            <version>0.9.5</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
