@@ -23,10 +23,11 @@ The data directory should be organized as follows:
 ![data directory](directory_organization.png)
 
 ### Server deployment
-
-Use the command `mvn clean package` to generate a WAR file in the `target/` directory.
-The file should be named `raptor-backend-0.1-SNAPSHOT.war`.
-To deploy this generated WAR file, simply copy it to the `webapps/` folder of your Apache Tomcat installation directory.
+Place the `data/` in the `bin/` folder of your Apache Tomcat installation directory.
+Apache Tomcat requires the `data/` directory to be placed in the same directory as the Apache Tomcat startup script (i.e) `bin/`. 
+Run the command `mvn clean package` to generate a WAR file in the `target/` directory.
+The file should be named as `futurefarmnow-backend-0.2-SNAPSHOT.war`.
+To deploy this generated WAR file, simply copy it to the `webapps/` directory of your Apache Tomcat installation directory, and start the Tomcat server. 
 
 ### API
 Check the detailed [API description here](api.md).
