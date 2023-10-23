@@ -38,15 +38,14 @@ import org.locationtech.jts.geom.Envelope;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.GeometryFactory;
 
-public class FarmlandServlet extends HttpServlet {
+public class VectorFarmlandServlet extends HttpServlet {
 
     Configuration hadoopConf = new Configuration();
 
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         // time at start of GET request
         long t1 = System.nanoTime();
-        
-        
+
         boolean gzipResponse = isGZIPAcceptable(request);
 
         // we set content-type as application/geo+json
@@ -60,17 +59,13 @@ public class FarmlandServlet extends HttpServlet {
         // otherwise, the front-end won't be able to make GET requests to this server because of CORS policy
         response.addHeader("Access-Control-Allow-Origin", "*");
 
-
         // Load the Farmland features
         RTreeFeatureReader reader = new RTreeFeatureReader();
-        Path indexPath = new Path("data/CA_farmland/CA_farmland.rtree");
-        
+        Path indexPath = new Path("data/AZ_LowerColoradoFarmland/AZ_LowerColoradoFarmland.rtree");
 
         FileSystem fs = indexPath.getFileSystem(hadoopConf);
         long fileLength = fs.getFileStatus(indexPath).getLen();
         FileSplit inputFileSplit = new FileSplit(indexPath, 0, fileLength, null);
-
-
         BeastOptions opts = new BeastOptions();
         try {
             // get extents parameters
@@ -82,8 +77,11 @@ public class FarmlandServlet extends HttpServlet {
         } catch (java.lang.NullPointerException e) {
             // MBR not passed. Use all farmlands
         }
-        
         reader.initialize(inputFileSplit, opts);
+
+
+        //Need to process conversion between UTM -> Lat/long format!
+
 
         // try writing out a record
         int numRecords = 0;

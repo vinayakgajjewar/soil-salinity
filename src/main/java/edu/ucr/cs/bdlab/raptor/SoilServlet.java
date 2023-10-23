@@ -84,6 +84,7 @@ public class SoilServlet extends HttpServlet {
         // Load the Farmland features
         RTreeFeatureReader reader = new RTreeFeatureReader();
         Path indexPath = new Path("data/CA_farmland/CA_farmland.rtree");
+        //Path indexPath = new Path("./CA_farmland.rtree");
         FileSystem fs = indexPath.getFileSystem(hadoopConf);
         long fileLength = fs.getFileStatus(indexPath).getLen();
         FileSplit inputFileSplit = new FileSplit(indexPath, 0, fileLength, null);
