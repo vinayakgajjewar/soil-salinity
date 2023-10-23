@@ -147,3 +147,13 @@ Currently, the accepted values for from and to are {0, 5, 15, 30, 60, 100, 200} 
   ]
 }
 ```
+## Get soil statistics for a specific Vector Dataset
+| Description | Get computed soil statistics for selected farmlands in JSON format |
+|-------------|--------------------------------------------------------------------|
+| Endpoint    | `/vectors/<name-of-dataset>.json`                                  |
+| HTTP method | GET                                                                |
+
+1.Create an r-tree index of for your required vector dataset, by running this Beast CLI command
+`beast index <name-of-dataset> iformat:<format-of-vector-data> <name-of-index> gindex:rsgrove oformat:rtree`
+2. Place the r-tree index file in the /bin/data directory of your Apache Tomcat Installation
+3. Now you can proceed with using the API
