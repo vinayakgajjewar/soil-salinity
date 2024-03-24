@@ -7,8 +7,12 @@
    version="3.1">
 
   <servlet>
+    <servlet-name>VectorInfoServlet</servlet-name>
+    <servlet-class>edu.ucr.cs.bdlab.raptor.VectorInfoServlet</servlet-class>
+  </servlet>
+  <servlet>
     <servlet-name>FarmlandServlet</servlet-name>
-    <servlet-class>edu.ucr.cs.bdlab.raptor.FarmlandServlet</servlet-class>
+    <servlet-class>edu.ucr.cs.bdlab.raptor.VectorFeaturesServlet</servlet-class>
   </servlet>
   <servlet>
     <servlet-name>SoilServlet</servlet-name>
@@ -20,15 +24,19 @@
   </servlet>
   <servlet>
     <servlet-name>TileServlet</servlet-name>
-    <servlet-class>edu.ucr.cs.bdlab.raptor.TileServlet</servlet-class>
+    <servlet-class>edu.ucr.cs.bdlab.raptor.VectorTileServlet</servlet-class>
   </servlet>
-  <servlet>
-    <servlet-name>VectorFarmlandServlet</servlet-name>
-    <servlet-class>edu.ucr.cs.bdlab.raptor.VectorFarmlandServlet</servlet-class>
-  </servlet> 
+  <servlet-mapping>
+    <servlet-name>TileServlet</servlet-name>
+    <url-pattern>*.png</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>VectorInfoServlet</servlet-name>
+    <url-pattern>/vectors.json</url-pattern>
+  </servlet-mapping>
   <servlet-mapping>
     <servlet-name>FarmlandServlet</servlet-name>
-    <url-pattern>/vectors/farmland.geojson/*</url-pattern>
+    <url-pattern>/vectors/*</url-pattern>
   </servlet-mapping>
   <servlet-mapping>
     <servlet-name>SoilServlet</servlet-name>
@@ -40,13 +48,5 @@
     <!--<url-pattern>/vectors/singlepolygon.json/*</url-pattern>-->
     <url-pattern>/soil/singlepolygon.json/*</url-pattern>
   </servlet-mapping>
-  <servlet-mapping>
-    <servlet-name>TileServlet</servlet-name>
-    <url-pattern>*.png</url-pattern>
-  </servlet-mapping>
-  <servlet-mapping>
-    <servlet-name>VectorFarmlandServlet</servlet-name>
-    <url-pattern>/vectors/AZ_LowerColoradoFarmland.geojson/*</url-pattern>
-  </servlet-mapping> 
 
 </web-app>

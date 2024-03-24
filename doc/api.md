@@ -3,19 +3,45 @@ Version: 0.2-RC1
 
 All the following end-points are hosted under the URL `https://raptor.cs.ucr.edu/futurefarmnow-backend-<VERSION>`. The current version is shown at the top of this document. All the following endpoints should be preceded with the base URL given above.
 
-## Retrieve farmland
+## List vector products
+Lists all the vector datasets available on the server.
 
-| Description | Return the full dataset or subset of it defined by a region in the GeoJSON file format |
-|-------------|----------------------------------------------------------------------------------------|
-| Endpoint    | `/vectors/farmland.geojson`                                                            |
-| HTTP method | GET                                                                                    |
+| End Point   | `/vectors.json` |
+|-------------|-----------------|
+| HTTP Method | GET             |
 
-| Parameter | Required? | How to use | Description         |
-|-----------|-----------|------------|---------------------|
-| minx      | optional  | ?minx=     | West edge longitude |
-| miny      | optional  | ?miny=     | South edge latitude |
-| maxx      | optional  | ?maxx=     | East edge longitude |
-| maxy      | optional  | ?maxy=     | North edge latitude |
+*Result:*
+```json
+{
+  "vectors": [
+    {
+      "id": "farmland",
+      "title": "California Farmlands",
+      "description": "All farmlands in California"
+    }, {
+      ...
+    }
+  ]
+}
+```
+
+## Retrieve vector dataset
+Returns the full vector dataset or a subset of it defined by a region in the GeoJSON file format.
+
+
+| End Point   | `/vectors/<id>.geojson` |
+|-------------|-------------------------|
+| HTTP method | GET                     |
+
+### Parameters
+
+| Parameter | Required? | How to use | Description                              |
+|-----------|-----------|------------|------------------------------------------|
+| id        | required  | URL        | The ID of the vector dataset to retrieve | 
+| minx      | optional  | ?minx=     | West edge longitude                      |
+| miny      | optional  | ?miny=     | South edge latitude                      |
+| maxx      | optional  | ?maxx=     | East edge longitude                      |
+| maxy      | optional  | ?maxy=     | North edge latitude                      |
 
 Note: if MBR is not specified, the whole dataset will be returned as GeoJSON.
 
@@ -49,11 +75,11 @@ Note: if MBR is not specified, the whole dataset will be returned as GeoJSON.
 }
 ```
 
-## Retrieve Farmland Tile
+## Retrieve vector dataset Tile
+Retrieves a tile visualization for the entire Farmland dataset.
 
-| Description | Retrieves a tile visualization for the entire Farmland dataset. |
+| Endpoint    | `/vectors/<id>/tile-z-x-y.png`                                 |
 |-------------|-----------------------------------------------------------------|
-| Endpoint    | `/vectors/farmland/tile-z-x-y.png`                              |
 | HTTP method | GET                                                             |
 | Since       | 0.1.1                                                           |
 
@@ -62,15 +88,16 @@ Note: if MBR is not specified, the whole dataset will be returned as GeoJSON.
 <http://raptor.cs.ucr.edu/futurefarmnow-backend-0.2-RC1/vectors/farmland/tile-1-0-0.png>
 
 #### Response
-![Tile 1,0,0](tile-1-0-0.png)
+![Tile 1,0,0](images/tile-1-0-0.png)
 
 ## Get soil statistics for a single farmland
 
-| Description  | Get soil statistics for a single farmland defined by GeoJSON. The output is in JSON format. |
-|--------------|---------------------------------------------------------------------------------------------|
-| Endpoint     | `/soil/singlepolygon.json`                                                                  |
-| HTTP method  | GET/POST                                                                                    |
-| POST payload | GeoJSON geometry object                                                                     |
+Get soil statistics for a single geometry defined by GeoJSON. The output is in JSON format.
+
+| Endpoint     | `/soil/singlepolygon.json` |
+|--------------|----------------------------|
+| HTTP method  | GET/POST                   |
+| POST payload | GeoJSON geometry object    |
 
 | Parameter | Required? | How to use                                                                                                           | Description                           |
 |-----------|-----------|----------------------------------------------------------------------------------------------------------------------|---------------------------------------|
@@ -105,13 +132,15 @@ curl -X GET "http://raptor.cs.ucr.edu/futurefarmnow-backend-0.2-RC1/soil/singlep
 ```
 
 ## Get soil statistics for all farmlands in a region
-| Description | Get computed soil statistics for selected farmlands in JSON format |
-|-------------|--------------------------------------------------------------------|
-| Endpoint    | `/soil/farmland.json`                                              |
-| HTTP method | GET                                                                |
+Get computed soil statistics for selected vector products in JSON format
+
+| Endpoint    | `/soil/<id>.json` |
+|-------------|--------------------|
+| HTTP method | GET                |
 
 | Parameter | Required? | How to use                                                                                                           | Description                          |
 |-----------|-----------|----------------------------------------------------------------------------------------------------------------------|--------------------------------------|
+| id        | Required  | URL                                                                                                                  | The ID of the vector dataset         |
 | minx      | Optional  | ?minx=                                                                                                               | West edge longitude value            |
 | miny      | Optional  | ?miny=                                                                                                               | South edge latitude value            |
 | maxx      | Optional  | ?maxx=                                                                                                               | East edge longitude value            |
@@ -147,13 +176,3 @@ Currently, the accepted values for from and to are {0, 5, 15, 30, 60, 100, 200} 
   ]
 }
 ```
-## Get soil statistics for a specific Vector Dataset
-| Description | Get computed soil statistics for selected farmlands in JSON format |
-|-------------|--------------------------------------------------------------------|
-| Endpoint    | `/vectors/<name-of-dataset>.json`                                  |
-| HTTP method | GET                                                                |
-
-1.Create an r-tree index of for your required vector dataset, by running this Beast CLI command
-`beast index <name-of-dataset> iformat:<format-of-vector-data> <name-of-index> gindex:rsgrove oformat:rtree`
-2. Place the r-tree index file in the /bin/data directory of your Apache Tomcat Installation
-3. Now you can proceed with using the API

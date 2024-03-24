@@ -30,12 +30,12 @@
         <dependency>
             <groupId>edu.ucr.cs.bdlab</groupId>
             <artifactId>beast-spark</artifactId>
-            <version>0.9.5</version>
+            <version>0.10.1-RC2</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-            <version>2.10.0</version>
+            <version>2.14.2</version>
         </dependency>
         <dependency>
             <groupId>org.locationtech.jts</groupId>

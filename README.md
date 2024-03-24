@@ -20,17 +20,25 @@ The soil salinity backend relies upon Java 1.8.0 and Scala 2.12.7.
 This project expects all data files (shapefile, GeoTIFF) to be stored in the `data/` directory.
 The data directory should be organized as follows:
 
-![data directory](directory_organization.png)
+![data directory](doc/images/directory_organization.png)
+
+### Run in development
+To run the server in development mode, run `mvn jetty:run`.
+This can be done from IntelliJ IDEA as a Maven run type.
 
 ### Server deployment
-Place the `data/` in the `bin/` folder of your Apache Tomcat installation directory.
-Apache Tomcat requires the `data/` directory to be placed in the same directory as the Apache Tomcat startup script (i.e) `bin/`. 
+Place the `data/` on the server at which you want it to be hosted.
+Apache Tomcat requires the `data/` directory to be placed in the same directory that you start the Tomacat server at.
 Run the command `mvn clean package` to generate a WAR file in the `target/` directory.
 The file should be named as `futurefarmnow-backend-0.2-SNAPSHOT.war`.
-To deploy this generated WAR file, simply copy it to the `webapps/` directory of your Apache Tomcat installation directory, and start the Tomcat server. 
+To deploy this generated WAR file, simply copy it to the `webapps/` directory of your Apache Tomcat installation directory.
+Start the Tomcat server at the same directory where you place the `data` directory (not inside the `data` directory). 
 
 ### API
-Check the detailed [API description here](api.md).
+Check the detailed [API description here](doc/api.md).
+
+### Add vector dataset
+Check the [step-by-step instructions for adding a new vector dataset](doc/add-vector-dataset.md).
 
 ## License
 

@@ -73,9 +73,9 @@ object SingleMachineRaptorJoin {
     (java.lang.Float, java.lang.Float, java.lang.Float, java.lang.Float, java.lang.Float, java.lang.Float, java.lang.Integer, java.lang.Float) = {
     val intersections: Array[(Int, Intersections)] = rasterFileNames.zipWithIndex.map( {case (rasterFileName: String, index: Int) =>
       val rasterFS: FileSystem = new Path(rasterFileName).getFileSystem(new Configuration())
-      val rasterReader = RasterHelper.createRasterReader(rasterFS, new Path(rasterFileName), new BeastOptions(), new SparkConf())
+      val rasterReader = RasterHelper.createRasterReader(rasterFS, new Path(rasterFileName), new BeastOptions())
       val intersections = new Intersections()
-      intersections.compute(geomArray, rasterReader.metadata, new BeastOptions())
+      intersections.compute(geomArray, rasterReader.metadata)
       (index, intersections)
     }).filter(_._2.getNumIntersections > 0)
     if (intersections.isEmpty)

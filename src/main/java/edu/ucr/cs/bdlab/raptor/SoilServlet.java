@@ -132,7 +132,7 @@ public class SoilServlet extends HttpServlet {
         Collector[] finalResults = null;
         GeoTiffReader<Float> rasterReader = new GeoTiffReader<>();
         for (String matchingRasterFile : matchingRasterFiles) {
-            rasterReader.initialize(fs, matchingRasterFile, "0", opts, null);
+            rasterReader.initialize(fs, matchingRasterFile, "0", opts);
             Collector[] stats = ZonalStatistics.zonalStatsLocal(farmlands.toArray(new IFeature[0]), rasterReader,
                 SoilStatistics.class);
             if (finalResults == null) {
