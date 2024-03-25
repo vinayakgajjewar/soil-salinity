@@ -21,7 +21,7 @@ that contains a single file `part-00000.rtree`. Copy this file to the server `da
 Build a visualization index on the indexed data using the following command.
 
 ```shell
-beast mplot data/CA_farmland/index.rtree iformat:rtree data/CA_farmland/plot.zip plotter:gplot levels:20
+beast mplot data/CA_farmland/index.rtree iformat:rtree data/CA_farmland/plot.zip -mercator plotter:gplot levels:20
 ```
 
 ## Compute dataset summary

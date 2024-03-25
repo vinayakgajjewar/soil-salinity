@@ -23,16 +23,13 @@ The data directory should be organized as follows:
 ![data directory](doc/images/directory_organization.png)
 
 ### Run in development
-To run the server in development mode, run `mvn jetty:run`.
-This can be done from IntelliJ IDEA as a Maven run type.
+To run the server in development mode, run the class "`edu.ucr.cs.bdlab.beast.operations.Main`" with command line
+argument `server`.
 
 ### Server deployment
 Place the `data/` on the server at which you want it to be hosted.
-Apache Tomcat requires the `data/` directory to be placed in the same directory that you start the Tomacat server at.
-Run the command `mvn clean package` to generate a WAR file in the `target/` directory.
-The file should be named as `futurefarmnow-backend-0.2-SNAPSHOT.war`.
-To deploy this generated WAR file, simply copy it to the `webapps/` directory of your Apache Tomcat installation directory.
-Start the Tomcat server at the same directory where you place the `data` directory (not inside the `data` directory). 
+Install Beast CLI and run the command `beast server` at the same directory where you have 
+the `data` directory (not inside the `data` directory).
 
 ### API
 Check the detailed [API description here](doc/api.md).
@@ -42,7 +39,7 @@ Check the [step-by-step instructions for adding a new vector dataset](doc/add-ve
 
 ## License
 
-Copyright 2021 University of California, Riverside
+Copyright 2024 University of California, Riverside
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
