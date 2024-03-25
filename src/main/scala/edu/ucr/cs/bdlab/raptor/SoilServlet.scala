@@ -6,8 +6,9 @@ import edu.ucr.cs.bdlab.beast.geolite.IFeature
 import edu.ucr.cs.bdlab.beast.indexing.RTreeFeatureReader
 import edu.ucr.cs.bdlab.beast.io.SpatialFileRDD
 import edu.ucr.cs.bdlab.beast.util.AbstractWebHandler
+import edu.ucr.cs.bdlab.raptor
 import org.apache.commons.io.IOUtils
-import org.apache.hadoop.fs.Path
+import org.apache.hadoop.fs.{Path, PathFilter}
 import org.apache.hadoop.mapreduce.lib.input.FileSplit
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.SparkSession
@@ -21,6 +22,7 @@ import javax.servlet.http.{HttpServletRequest, HttpServletResponse}
 import scala.collection.JavaConverters.asScalaIteratorConverter
 
 class SoilServlet extends AbstractWebHandler with Logging {
+  import SoilServlet._
 
   /** Additional options passed on by the user to override existing options */
   var opts: BeastOptions = _
@@ -36,15 +38,30 @@ class SoilServlet extends AbstractWebHandler with Logging {
     this.opts = opts
     this.sparkSession = ss
     this.dataPath = opts.getString("datapath", "data")
+
+    // Build indexes if not existent
+    logInfo("Building raster indexes")
+    val dataPath = new Path(new Path(this.dataPath), "POLARIS")
+    val sc = ss.sparkContext
+    val fs = dataPath.getFileSystem(sc.hadoopConfiguration)
+    val directories = fs.globStatus(new Path(dataPath, "**/**"),
+      (path: Path) => path.getName.matches("\\d+_\\d+_compressed"))
+    for (dir <- directories) {
+      val indexPath = new Path(dir.getPath, "_index.csv")
+      if (!fs.exists(indexPath)) {
+        logInfo(s"Building a raster index for '${dir.getPath}'")
+        RasterFileRDD.buildIndex(sc, dir.getPath.toString, indexPath.toString)
+      }
+    }
   }
 
-  @WebMethod(url = "/soil/singlepolygon.json")
+  @WebMethod(url = "/soil/singlepolygon.json", order = 1)
   def singlePolygon(path: String, request: HttpServletRequest, response: HttpServletResponse): Boolean = {
     // sidebar select parameters// sidebar select parameters
     var soilDepth = ""
     var layer = ""
 
-    // try getting parameters from url// try getting parameters from url
+    // try getting parameters from url
     try {
       soilDepth = request.getParameter("soildepth")
       layer = request.getParameter("layer")
@@ -62,9 +79,9 @@ class SoilServlet extends AbstractWebHandler with Logging {
     response.addHeader("Access-Control-Allow-Origin", "*")
 
     // load raster data based on selected soil depth and layer// load raster data based on selected soil depth and layer
-    val matchingRasterFiles: Array[String] = SoilServlet2.rasterFiles
+    val matchingRasterDirs: Array[String] = rasterFiles
       .filter(rasterFile => SoilServlet.rangeOverlap(rasterFile._1, soilDepth))
-      .map(rasterFile => s"data/tif/${rasterFile._2}/$layer.tif")
+      .map(rasterFile => s"data/POLARIS/$layer/${rasterFile._2}")
       .toArray
 
     val baos = new ByteArrayOutputStream
@@ -88,11 +105,13 @@ class SoilServlet extends AbstractWebHandler with Logging {
         e.printStackTrace()
     }
 
-    val geomArray = Array(geom)
-
-    // now that we have a geometry object// now that we have a geometry object
-    // call single machine raptor join// call single machine raptor join
-    val singleMachineResults: SingleMachineRaptorJoin.Statistics = SingleMachineRaptorJoin.join(matchingRasterFiles, geomArray)
+    // now that we have a geometry object
+    // call single machine raptor join
+    val fileSystem = new Path(dataPath).getFileSystem(sparkSession.sparkContext.hadoopConfiguration)
+    val matchingFiles = matchingRasterDirs.flatMap(matchingRasterDir =>
+      RasterFileRDD.selectFiles(fileSystem, matchingRasterDir, geom))
+    logDebug(s"Query matched ${matchingFiles.length} files")
+    val singleMachineResults: SingleMachineRaptorJoin.Statistics = SingleMachineRaptorJoin.join(matchingFiles, Array(geom))
 
     // write result to json object// write result to json object
     val resWriter = response.getWriter
@@ -129,18 +148,16 @@ class SoilServlet extends AbstractWebHandler with Logging {
     true
   }
 
-  @WebMethod(url = "/soil/{datasetID}.json")
+  @WebMethod(url = "/soil/{datasetID}.json", order = 99)
   def queryVector(path: String, request: HttpServletRequest, response: HttpServletResponse, datasetID: String): Boolean = {
     // time at start of GET request
     val t1 = System.nanoTime
 
-    // we set content-type as application/geo+json// we set content-type as application/geo+json
-    // not application/json// not application/json
     response.setContentType("application/json")
     response.setStatus(HttpServletResponse.SC_OK)
 
-    // set Access-Control-Allow-Origin// set Access-Control-Allow-Origin
-    // otherwise, the front-end won't be able to make GET requests to this server because of CORS policy// otherwise, the front-end won't be able to make GET requests to this server because of CORS policy
+    // set Access-Control-Allow-Origin
+    // otherwise, the front-end won't be able to make GET requests to this server because of CORS policy
     response.addHeader("Access-Control-Allow-Origin", "*")
 
     // Load the Farmland features// Load the Farmland features
@@ -185,7 +202,7 @@ class SoilServlet extends AbstractWebHandler with Logging {
     logInfo(s"Read ${farmlands.size()} records in ${(System.nanoTime() - t1) *1E-9} seconds")
 
     // load raster data based on selected soil depth and layer// load raster data based on selected soil depth and layer
-    val matchingRasterFiles: Array[String] = SoilServlet2.rasterFiles
+    val matchingRasterFiles: Array[String] = rasterFiles
       .filter(rasterFile => SoilServlet.rangeOverlap(rasterFile._1, soilDepth))
       .map(rasterFile => s"data/tif/${rasterFile._2}/$layer.tif")
       .toArray

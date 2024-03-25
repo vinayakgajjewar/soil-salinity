@@ -30,7 +30,7 @@
         <dependency>
             <groupId>edu.ucr.cs.bdlab</groupId>
             <artifactId>beast-spark</artifactId>
-            <version>0.10.1-RC2</version>
+            <version>0.10.1-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
