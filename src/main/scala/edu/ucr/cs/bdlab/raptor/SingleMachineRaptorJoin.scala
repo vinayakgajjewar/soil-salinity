@@ -59,25 +59,45 @@ object SingleMachineRaptorJoin {
     Statistics( min, max, median, sum, mode, stdev, count, mean )
   }
 
-  def join(rasterFileNames: Array[String], geomArray: Array[Geometry]): Statistics = {
+  def join(rasterFileNames: Array[String], geomArray: Array[Geometry]): Array[Statistics] = {
     val intersections: Array[(Int, Intersections)] = rasterFileNames.zipWithIndex.map( {case (rasterFileName: String, index: Int) =>
       val rasterFS: FileSystem = new Path(rasterFileName).getFileSystem(new Configuration())
       val rasterReader = RasterHelper.createRasterReader(rasterFS, new Path(rasterFileName), new BeastOptions())
       val intersections = new Intersections()
       intersections.compute(geomArray, rasterReader.metadata)
+      rasterReader.close()
       (index, intersections)
     }).filter(_._2.getNumIntersections > 0)
     if (intersections.isEmpty)
       return null
-    val intersectionIterator: Iterator[(scala.Long, PixelRange)] = new IntersectionsIterator(intersections.map(_._1), intersections.map(_._2))
-    val pixelIterator: Iterator[RaptorJoinResult[scala.Float]] = new PixelIterator(intersectionIterator, rasterFileNames, "0")
+    val intersectionIterator: Iterator[(Long, PixelRange)] = new IntersectionsIterator(intersections.map(_._1), intersections.map(_._2))
+    val pixelIterator: Iterator[RaptorJoinResult[Float]] = new PixelIterator(intersectionIterator, rasterFileNames, "0")
+    //println(pixelIterator.toArray.mkString(","))
 
     // return statistics
-    statistics(pixelIterator.map(x => x.m).filterNot(_ == -9999).toList)
+    val values: Iterator[(Long, Float)] = pixelIterator.filterNot(_.m == -9999)
+      .map(x => (x.featureID, x.m))
+
+    // Custom function to process iterator and group by key
+    def processIterator(values: Iterator[(Long, Float)]): Iterator[Statistics] = new Iterator[Statistics] {
+      // Peekable iterator to check ahead without consuming the element
+      var peekableValues = values.buffered
+
+      override def hasNext: Boolean = peekableValues.hasNext
+
+      override def next(): Statistics = {
+        if (!hasNext) throw new NoSuchElementException("next on empty iterator")
+        val currentKey = peekableValues.head._1
+        val group = peekableValues.takeWhile(_._1 == currentKey).map(_._2).toList
+        statistics(group)
+      }
+    }
+
+    processIterator(values).toArray
   }
 
   // join function
-  def join(rasterPath: String, geomArray: Array[Geometry]): Statistics =
+  def join(rasterPath: String, geomArray: Array[Geometry]): Array[Statistics] =
     join(Array(rasterPath), geomArray)
 
 }
