@@ -59,29 +59,12 @@ object SingleMachineRaptorJoin {
     Statistics( min, max, median, sum, mode, stdev, count, mean )
   }
 
-  def join(rasterFileNames: Array[String], geomArray: Array[Geometry]): Array[Statistics] = {
-    val intersections: Array[(Int, Intersections)] = rasterFileNames.zipWithIndex.map( {case (rasterFileName: String, index: Int) =>
-      val rasterFS: FileSystem = new Path(rasterFileName).getFileSystem(new Configuration())
-      val rasterReader = RasterHelper.createRasterReader(rasterFS, new Path(rasterFileName), new BeastOptions())
-      val intersections = new Intersections()
-      intersections.compute(geomArray, rasterReader.metadata)
-      rasterReader.close()
-      (index, intersections)
-    }).filter(_._2.getNumIntersections > 0)
-    if (intersections.isEmpty)
-      return null
-    val intersectionIterator: Iterator[(Long, PixelRange)] = new IntersectionsIterator(intersections.map(_._1), intersections.map(_._2))
-    val pixelIterator: Iterator[RaptorJoinResult[Float]] = new PixelIterator(intersectionIterator, rasterFileNames, "0")
-    //println(pixelIterator.toArray.mkString(","))
-
-    // return statistics
-    val values: Iterator[(Long, Float)] = pixelIterator.filterNot(_.m == -9999)
-      .map(x => (x.featureID, x.m))
-
+  def zonalStatistics(rasterFileNames: Array[String], geomArray: Array[Geometry]): Array[Statistics] = {
+    val values: Iterator[(Long, Float)] = raptorJoin(rasterFileNames, geomArray)
     // Custom function to process iterator and group by key
     def processIterator(values: Iterator[(Long, Float)]): Iterator[Statistics] = new Iterator[Statistics] {
       // Peekable iterator to check ahead without consuming the element
-      var peekableValues = values.buffered
+      val peekableValues = values.buffered
 
       override def hasNext: Boolean = peekableValues.hasNext
 
@@ -93,11 +76,30 @@ object SingleMachineRaptorJoin {
       }
     }
 
-    processIterator(values).toArray
+    if (values == null) null else processIterator(values).toArray
+  }
+
+  def raptorJoin[T](rasterFileNames: Array[String], geomArray: Array[Geometry]): Iterator[(Long, T)] = {
+    val intersections: Array[(Int, Intersections)] = rasterFileNames.zipWithIndex.map({ case (rasterFileName: String, index: Int) =>
+      val rasterFS: FileSystem = new Path(rasterFileName).getFileSystem(new Configuration())
+      val rasterReader = RasterHelper.createRasterReader(rasterFS, new Path(rasterFileName), new BeastOptions())
+      val intersections = new Intersections()
+      intersections.compute(geomArray, rasterReader.metadata)
+      rasterReader.close()
+      (index, intersections)
+    }).filter(_._2.getNumIntersections > 0)
+    if (intersections.isEmpty)
+      return null
+    val intersectionIterator: Iterator[(Long, PixelRange)] = new IntersectionsIterator(intersections.map(_._1), intersections.map(_._2))
+    val pixelIterator: Iterator[RaptorJoinResult[T]] = new PixelIterator(intersectionIterator, rasterFileNames, "0")
+
+    // return statistics
+    val values: Iterator[(Long, T)] = pixelIterator.map(x => (x.featureID, x.m))
+    values
   }
 
   // join function
-  def join(rasterPath: String, geomArray: Array[Geometry]): Array[Statistics] =
-    join(Array(rasterPath), geomArray)
+  def zonalStatistics(rasterPath: String, geomArray: Array[Geometry]): Array[Statistics] =
+    zonalStatistics(Array(rasterPath), geomArray)
 
 }

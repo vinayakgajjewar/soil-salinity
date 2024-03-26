@@ -19,7 +19,6 @@ import javax.servlet.http.{HttpServletRequest, HttpServletResponse}
 import scala.collection.JavaConverters.asScalaIteratorConverter
 
 class NDVIServlet extends AbstractWebHandler with Logging {
-  import SoilServlet._
 
   /** Additional options passed on by the user to override existing options */
   var opts: BeastOptions = _
@@ -28,20 +27,20 @@ class NDVIServlet extends AbstractWebHandler with Logging {
   var sparkSession: SparkSession = _
 
   /** The path at which this server keeps all datasets */
-  var dataPath: String = _
+  var ndviDataPath: Path = _
 
   override def setup(ss: SparkSession, opts: BeastOptions): Unit = {
     super.setup(ss, opts)
     this.opts = opts
     this.sparkSession = ss
-    this.dataPath = opts.getString("datapath", "data")
+    val dataPath: String = opts.getString("datapath", "data")
+    ndviDataPath = new Path(dataPath, "NDVI")
 
     // Build indexes if not existent
     logInfo("Building raster indexes for NDVI")
-    val dataPath = new Path(new Path(this.dataPath), "NDVI")
     val sc = ss.sparkContext
-    val fs = dataPath.getFileSystem(sc.hadoopConfiguration)
-    val directories = fs.globStatus(new Path(dataPath, "**/**"),
+    val fs = ndviDataPath.getFileSystem(sc.hadoopConfiguration)
+    val directories = fs.listStatus(ndviDataPath,
       (path: Path) => path.getName.matches("\\d+-\\d+-\\d+"))
     for (dir <- directories) {
       val indexPath = new Path(dir.getPath, "_index.csv")
@@ -52,6 +51,13 @@ class NDVIServlet extends AbstractWebHandler with Logging {
     }
   }
 
+  /**
+   * Computes the NDVI time series for a give query polygon and a time range
+   * @param path
+   * @param request
+   * @param response
+   * @return
+   */
   @WebMethod(url = "/ndvi/singlepolygon.json", order = 1)
   def singlePolygon(path: String, request: HttpServletRequest, response: HttpServletResponse): Boolean = {
     // Date range
@@ -70,17 +76,15 @@ class NDVIServlet extends AbstractWebHandler with Logging {
     response.setContentType("application/json")
     response.setStatus(HttpServletResponse.SC_OK)
 
-    // set Access-Control-Allow-Origin// set Access-Control-Allow-Origin
-    // otherwise, the front-end won't be able to make GET requests to this server
-    // because of CORS policy// because of CORS policy
+    // set Access-Control-Allow-Origin.
+    // Otherwise, the front-end won't be able to make GET requests to this server because of CORS policy
     response.addHeader("Access-Control-Allow-Origin", "*")
 
     // load raster data based on selected date range
-    val fileSystem = new Path(dataPath).getFileSystem(sparkSession.sparkContext.hadoopConfiguration)
-    val matchingRasterDirs: Array[String] = rasterFiles
-      .filter(rasterFile => SoilServlet.rangeOverlap(rasterFile._1, soilDepth))
-      .map(rasterFile => s"data/POLARIS/$layer/${rasterFile._2}")
-      .toArray
+    val fileSystem = ndviDataPath.getFileSystem(sparkSession.sparkContext.hadoopConfiguration)
+    val matchingRasterDirs: Array[String] = fileSystem.listStatus(ndviDataPath,
+      (path: Path) => NDVIServlet.dateRangeOverlap(dateFrom, dateTo, path.getName))
+      .map(_.getPath.toString)
 
     val baos = new ByteArrayOutputStream
     val input = request.getInputStream
@@ -88,7 +92,7 @@ class NDVIServlet extends AbstractWebHandler with Logging {
     input.close()
     baos.close()
 
-    // initialize geojson reader to parse the query geometry
+    // initialize GeoJSON reader to parse the query geometry
     val reader = new GeoJsonReader(new GeometryFactory)
 
     // try reading the geojson string into a geometry object// try reading the geojson string into a geometry object
@@ -103,54 +107,59 @@ class NDVIServlet extends AbstractWebHandler with Logging {
         e.printStackTrace()
     }
 
-    // now that we have a geometry object
-    // call single machine raptor join
+    // Now that we have the query geometry, loop over al matching directories and run the NDVI query
+    val results: Array[(String, Float)] = matchingRasterDirs.map(matchingRasterDir => {
+      val matchingFiles = RasterFileRDD.selectFiles(fileSystem, matchingRasterDir, geom)
+      if (matchingFiles.isEmpty)
+        null
+      else {
+        // Use RaptorJoin to find the results
+        val results = SingleMachineRaptorJoin.raptorJoin[Array[Int]](matchingFiles, Array(geom))
+        // Since we have one geometry, all the results are for a single geometry
+        val mean = results
+          .filter(x => x._2(0) + x._2(3) > 0) // Drop records with a denominator of zero
+          .map(x => (x._2(0).toFloat - x._2(3)) / (x._2(0).toFloat + x._2(3))) // NDVI Equation
+          .aggregate((0.0F,0))((sumCount, v) => (sumCount._1 + v, sumCount._2 + 1),
+          (sumCount1, sumCount2) => (sumCount1._1 + sumCount2._1, sumCount1._2 + sumCount2._2))
+        (new Path(matchingRasterDir).getName, mean._1 / mean._2)
+      }
+    }).filter(_ != null)
 
-    val matchingFiles = matchingRasterDirs.flatMap(matchingRasterDir =>
-      RasterFileRDD.selectFiles(fileSystem, matchingRasterDir, geom))
-    logDebug(s"Query matched ${matchingFiles.length} files")
-    val singleMachineResults: SingleMachineRaptorJoin.Statistics = SingleMachineRaptorJoin.join(matchingFiles, Array(geom))(0)
-
-    // write result to json object// write result to json object
+    // write result to json object
     val resWriter = response.getWriter
     val mapper = new ObjectMapper
 
-    // create query node// create query node
+    // create query node
     val queryNode = mapper.createObjectNode
-    queryNode.put("soildepth", soilDepth)
-    queryNode.put("layer", layer)
+    queryNode.put("from", dateFrom)
+    queryNode.put("to", dateTo)
 
-    // create results node// create results node
-    val resultsNode = mapper.createObjectNode
-    if (singleMachineResults != null) {
-      resultsNode.put("min", singleMachineResults.min)
-      resultsNode.put("max", singleMachineResults.max)
-      resultsNode.put("median", singleMachineResults.median)
-      resultsNode.put("sum", singleMachineResults.sum)
-      resultsNode.put("mode", singleMachineResults.mode)
-      resultsNode.put("stddev", singleMachineResults.stdev)
-      resultsNode.put("count", singleMachineResults.count)
-      resultsNode.put("mean", singleMachineResults.mean)
+    // create results node
+    val resultsNode = mapper.createArrayNode()
+    for (result <- results) {
+      val resultNode = mapper.createObjectNode()
+      resultNode.put("date", result._1)
+      resultNode.put("mean", result._2)
+      resultsNode.add(resultNode)
     }
 
-    // create root node// create root node
-    // contains queryNode and resultsNode// contains queryNode and resultsNode
+    // Create a root node that contains queryNode and resultsNode
     val rootNode = mapper.createObjectNode
     rootNode.set("query", queryNode)
     rootNode.set("results", resultsNode)
 
-    // write values to response writer// write values to response writer
+    // write values to response writer
     val jsonString = mapper.writer.writeValueAsString(rootNode)
     resWriter.print(jsonString)
     resWriter.flush()
     true
   }
 
-  @WebMethod(url = "/soil/{datasetID}.json", order = 99)
+  @WebMethod(url = "/ndvi/{datasetID}.json", order = 99)
   def queryVector(path: String, request: HttpServletRequest, response: HttpServletResponse, datasetID: String): Boolean = {
     // time at start of GET request
     val t1 = System.nanoTime
-
+/*
     response.setContentType("application/json")
     response.setStatus(HttpServletResponse.SC_OK)
 
@@ -264,13 +273,16 @@ class NDVIServlet extends AbstractWebHandler with Logging {
     // write values to response writer// write values to response writer
     val jsonString = mapper.writer.writeValueAsString(rootNode)
     out.print(jsonString)
-    out.flush()
+    out.flush()*/
     true
   }
 }
 
 object NDVIServlet {
   def dateRangeOverlap(from: String, to: String, date: String): Boolean = {
-
+    val fromParts = from.split("-").map(_.toInt)
+    val toParts = to.split("-").map(_.toInt)
+    val dateParts = date.split("-").map(_.toInt)
+    fromParts.indices.forall(i => dateParts(i) >= fromParts(i) && dateParts(i) <= toParts(i))
   }
 }

@@ -108,7 +108,7 @@ class SoilServlet extends AbstractWebHandler with Logging {
     val matchingFiles = matchingRasterDirs.flatMap(matchingRasterDir =>
       RasterFileRDD.selectFiles(fileSystem, matchingRasterDir, geom))
     logDebug(s"Query matched ${matchingFiles.length} files")
-    val singleMachineResults: SingleMachineRaptorJoin.Statistics = SingleMachineRaptorJoin.join(matchingFiles, Array(geom))(0)
+    val singleMachineResults: SingleMachineRaptorJoin.Statistics = SingleMachineRaptorJoin.zonalStatistics(matchingFiles, Array(geom))(0)
 
     // write result to json object// write result to json object
     val resWriter = response.getWriter
@@ -213,7 +213,7 @@ class SoilServlet extends AbstractWebHandler with Logging {
     logDebug(s"Query matched ${matchingRasterFiles.length} files")
 
     // Load raster data// Load raster data
-    val finalResults = SingleMachineRaptorJoin.join(matchingRasterFiles, farmlands.map(_.getGeometry))
+    val finalResults = SingleMachineRaptorJoin.zonalStatistics(matchingRasterFiles, farmlands.map(_.getGeometry))
 
     // write results to json object// write results to json object
     val out = response.getWriter
