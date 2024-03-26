@@ -176,3 +176,96 @@ Currently, the accepted values for from and to are {0, 5, 15, 30, 60, 100, 200} 
   ]
 }
 ```
+
+## Get NDVI for a single farmland
+
+Get NDVI time series for a single geometry defined by GeoJSON. The output is in JSON format.
+
+| Endpoint     | `/ndvi/singlepolygon.json` |
+|--------------|-------------------------|
+| HTTP method  | GET/POST                |
+| POST payload | GeoJSON geometry object |
+
+| Parameter | Required? | How to use       | Description              |
+|-----------|-----------|------------------|--------------------------|
+| from      | Required  | ?from=yyyy-mm-dd | Start date of the search |
+| to        | Required  | ?to=yyyy-mm-dd   | End date of the search   |
+
+### Examples
+#### URL
+<https://raptor.cs.ucr.edu/futurefarmnow-backend-0.2-RC1/ndvi/singlepolygon.json?from=2023-09-25&to=2023-09-30>
+
+#### GET/POST payload
+```json
+{"type" : "Polygon",  "coordinates" : [ [ [ -120.11975251694177, 36.90564006418889 ], [ -120.12409234994458, 36.90565751854381 ], [ -120.12406217104261, 36.90824957916899 ], [ -120.12410082465097, 36.90918197014845 ], [ -120.12405123315573, 36.90918899854245 ], [ -120.11974725371255, 36.9091820470047 ], [ -120.11975251694177, 36.90564006418889 ] ] ] }
+```
+
+#### Example with cUrl
+```shell
+cat > test.geojson
+{"type" : "Polygon",  "coordinates" : [ [ [ -120.11975251694177, 36.90564006418889 ], [ -120.12409234994458, 36.90565751854381 ], [ -120.12406217104261, 36.90824957916899 ], [ -120.12410082465097, 36.90918197014845 ], [ -120.12405123315573, 36.90918899854245 ], [ -120.11874725371255, 36.9091820470047 ], [ -120.11975251694177, 36.90564006418889 ] ] ]  }
+^D
+curl -X GET "http://raptor.cs.ucr.edu/futurefarmnow-backend-0.2-RC1/soil/singlepolygon.json?from=2023-09-25&to=2023-09-30" -H "Content-Type: application/geo+json" -d @test.geojson
+```
+
+#### Response
+```json
+{"query":{
+  "from":"2023-09-25",
+  "to":"2023-09-30"},
+  "results": [
+    {"date": "2023-09-25", "mean": 0.5},
+    {"date": "2023-09-29", "mean": 0.3},
+    ...
+  ]
+}
+```
+
+## Get NDVI for all farmlands in a region
+Get NDVI time series for selected vector products in JSON format
+
+| Endpoint    | `/ndvi/<id>.json` |
+|-------------|-------------------|
+| HTTP method | GET               |
+
+| Parameter | Required? | How to use       | Description                  |
+|-----------|-----------|------------------|------------------------------|
+| id        | Required  | URL              | The ID of the vector dataset |
+| minx      | Optional  | ?minx=           | West edge longitude value    |
+| miny      | Optional  | ?miny=           | South edge latitude value    |
+| maxx      | Optional  | ?maxx=           | East edge longitude value    |
+| maxy      | Optional  | ?maxy=           | North edge latitude value    |
+| from      | Required  | ?from=yyyy-mm-dd | The starting date            |
+| to        | Required  | ?to=yyyy-mm-dd   | The ending date              |
+
+The result is an array of (date, ndvi) values for each object. Notice that some dates may be missing.
+The result contains only the defined values.
+### Examples
+#### URL
+<http://raptor.cs.ucr.edu/futurefarmnow-backend-0.2-RC1/ndvi/farmland.json?minx=-127.8&miny=29.8&maxx=-115.6&maxy=33.7&from=2023-09-25&to=2023-09-30>
+
+#### Response
+```json
+{
+  "query":{
+    "from":"2023-09-25",
+    "to":"2023-09-30",
+    "mbr":{
+      "minx":-127.8,
+      "miny":29.8,
+      "maxx":-112.6,
+      "maxy":42.7
+    }
+  },
+  "results":[{
+    "objectid":"41176",
+    "values": [
+      {"date":  "2023-09-25", "mean": 0.8},
+      {"date":  "2023-09-27", "mean": 0.3},
+      ...
+    ]
+  },
+    ...
+  ]
+}
+```

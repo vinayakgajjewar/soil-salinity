@@ -22,5 +22,6 @@
   <WebHandlers>
     <WebHandler>edu.ucr.cs.bdlab.raptor.VectorServlet</WebHandler>
     <WebHandler>edu.ucr.cs.bdlab.raptor.SoilServlet</WebHandler>
+    <WebHandler>edu.ucr.cs.bdlab.raptor.NDVIServlet</WebHandler>
   </WebHandlers>
 </beast>
