@@ -9,7 +9,7 @@ Build an R-tree index on the source file. This should be a single file.
 Assuming the input file `CA_farmland.zip` in Shapefile format, you can run the following command:
 
 ```shell
-beast cat CA_farmland.zip iformat:shapefile CA_farmland.rtree oformat:rtree numpartitions:1
+beast cat CA_farmland.zip iformat:shapefile CA_farmland.rtree oformat:rtree numpartitions:1 osrid:4326
 ```
 
 You can replace the input file name and format as needed. This will create an output directory `CA_farmland.rtree`

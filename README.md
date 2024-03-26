@@ -28,8 +28,36 @@ argument `server`.
 
 ### Server deployment
 Place the `data/` on the server at which you want it to be hosted.
-Install Beast CLI and run the command `beast server` at the same directory where you have 
+Install Beast CLI and run the following command at the same directory where you have 
 the `data` directory (not inside the `data` directory).
+
+```shell
+beast --jars futurefarmnow-backend-*.jar server
+```
+
+In the directory where you run `beast server`, you can place a file `beast.properties` to set the default
+system parameters, e.g., `port`.
+
+**Configure through Apache:** If you want to make the server accessible through Apache, you can add the following
+configuration to your Apache web server.
+
+```
+<VirtualHost *:80>
+    <Directory /var/www/sites/ffn.cs.ucr.edu/public_html>
+        Require all granted
+        AllowOverride All
+        RewriteEngine On
+        RewriteCond %{REQUEST_URI}  ^/futurefarmnow-backend-0.2-SNAPSHOT/(.*)$
+        RewriteRule ^futurefarmnow-backend-0.2-SNAPSHOT/(.*)$ http://localhost:8081/$1 [P,L]
+        RewriteCond %{REQUEST_URI}  ^/futurefarmnow-backend-[\.0-9]*(-[\w\d]+)?/(.*)$
+        RewriteRule ^(.*)$ http://localhost:8080/$1 [P,L]
+   </Directory>
+</VirtualHost>
+```
+
+The first RewriteRule forwards all requests that begin with `/futurefarmnow-backend-0.2-SNAPSHOT/` to the server
+running on port 8081. The second rewrite rule forwards requests for any version to the server running on port 8080.
+This configuration allows you to deploy a different version of the API while keeping the stable version running.
 
 ### API
 Check the detailed [API description here](doc/api.md).

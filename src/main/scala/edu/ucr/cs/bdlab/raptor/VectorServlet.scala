@@ -61,7 +61,7 @@ class VectorServlet extends AbstractWebHandler with Logging {
    * ]
    * </pre>
    */
-  @WebMethod(url = "/datasets.json", method = "GET")
+  @WebMethod(url = "/vectors.json", method = "GET")
   def listDatasets(path: String, request: HttpServletRequest, response: HttpServletResponse): Boolean = {
     response.setContentType("application/json")
     // set Access-Control-Allow-Origin// set Access-Control-Allow-Origin

@@ -4,7 +4,7 @@
     <groupId>edu.ucr.cs.bdlab.raptor</groupId>
     <artifactId>futurefarmnow-backend</artifactId>
     <version>0.2-SNAPSHOT</version>
-    <packaging>war</packaging>
+    <packaging>jar</packaging>
     <name>FutureFarmNow Backend</name>
     <properties>
         <jettyVersion>9.4.48.v20220622</jettyVersion>
