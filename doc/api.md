@@ -242,7 +242,7 @@ The result is an array of (date, ndvi) values for each object. Notice that some 
 The result contains only the defined values.
 ### Examples
 #### URL
-<http://raptor.cs.ucr.edu/futurefarmnow-backend-0.2-RC1/ndvi/farmland.json?minx=-127.8&miny=29.8&maxx=-115.6&maxy=33.7&from=2023-09-25&to=2023-09-30>
+<http://raptor.cs.ucr.edu/futurefarmnow-backend-0.2-RC1/ndvi/AZ_Farmland.json?minx=-114.7&miny=32.5&maxx=-114.64&maxy=32.55267&from=2023-09-25&to=2023-09-30>
 
 #### Response
 ```json

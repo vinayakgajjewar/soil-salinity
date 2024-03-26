@@ -17,6 +17,7 @@ import org.locationtech.jts.io.geojson.GeoJsonReader
 import java.io.ByteArrayOutputStream
 import javax.servlet.http.{HttpServletRequest, HttpServletResponse}
 import scala.collection.JavaConverters.asScalaIteratorConverter
+import scala.collection.mutable.ArrayBuffer
 
 class NDVIServlet extends AbstractWebHandler with Logging {
 
@@ -103,8 +104,7 @@ class NDVIServlet extends AbstractWebHandler with Logging {
       geom.setSRID(4326)
     } catch {
       case e: ParseException =>
-        System.err.println("----ERROR: could not parse geojson string " + geometryGeoJSON)
-        e.printStackTrace()
+        logError(s"Could not parse GeoJSON string $geometryGeoJSON", e)
     }
 
     // Now that we have the query geometry, loop over al matching directories and run the NDVI query
@@ -159,7 +159,7 @@ class NDVIServlet extends AbstractWebHandler with Logging {
   def queryVector(path: String, request: HttpServletRequest, response: HttpServletResponse, datasetID: String): Boolean = {
     // time at start of GET request
     val t1 = System.nanoTime
-/*
+
     response.setContentType("application/json")
     response.setStatus(HttpServletResponse.SC_OK)
 
@@ -174,56 +174,68 @@ class NDVIServlet extends AbstractWebHandler with Logging {
     val fileLength = fs.getFileStatus(indexPath).getLen
     val inputFileSplit = new FileSplit(indexPath, 0, fileLength, null)
     val opts = new BeastOptions
-    var soilDepth: String = null
-    var layer: String = null
+    var dateFrom: String = null
+    var dateTo: String = null
     var mbr: Envelope = null
+    var searchGeom: Geometry = null
     try {
       // get sidebar select parameters
-      soilDepth = request.getParameter("soildepth")
-      layer = request.getParameter("layer")
+      dateFrom = request.getParameter("from")
+      dateTo = request.getParameter("to")
       // get extents parameters
       val minx = request.getParameter("minx").toDouble
       val miny = request.getParameter("miny").toDouble
       val maxx = request.getParameter("maxx").toDouble
       val maxy = request.getParameter("maxy").toDouble
       mbr = new Envelope(minx, maxx, miny, maxy)
+      searchGeom = new GeometryFactory().toGeometry(mbr)
+      searchGeom.setSRID(4326)
       opts.set(SpatialFileRDD.FilterMBR, Array(minx, miny, maxx, maxy).mkString(","))
     } catch {
       case e: NullPointerException =>
     }
     // MBR not passed. Use all farmlands
-    if (soilDepth == null || layer == null) {
+    if (dateFrom == null || dateTo == null) {
       val writer = response.getWriter
-      writer.printf("{\"error\": \"Error! Both 'soildepth' and 'layer' parameters are required\"}")
+      writer.printf("{\"error\": \"Error! Both 'from' and 'to' parameters are required\"}")
       return true
     }
-    // Initialize the reader that reads the relevant farmlands// Initialize the reader that reads the relevant farmlands
+    // Initialize the reader that reads the relevant farmlands
     reader.initialize(inputFileSplit, opts)
     // Retrieve in an array to prepare the zonal statistics calculation// Retrieve in an array to prepare the zonal statistics calculation
     val farmlands = reader.asScala.toArray
     reader.close()
     logInfo(s"Read ${farmlands.length} records in ${(System.nanoTime() - t1) *1E-9} seconds")
 
-    // load raster data based on selected soil depth and layer// load raster data based on selected soil depth and layer
-    val matchingRasterDirs: Array[String] = rasterFiles
-      .filter(rasterFile => SoilServlet.rangeOverlap(rasterFile._1, soilDepth))
-      .map(rasterFile => s"data/tif/${rasterFile._2}/$layer.tif")
-      .toArray
+    // load raster data based on selected date range
+    val fileSystem = ndviDataPath.getFileSystem(sparkSession.sparkContext.hadoopConfiguration)
+    val matchingRasterDirs: Array[String] = fileSystem.listStatus(ndviDataPath,
+        (path: Path) => NDVIServlet.dateRangeOverlap(dateFrom, dateTo, path.getName))
+      .map(_.getPath.toString)
 
-    val matchingRasterFiles = if (mbr != null) {
-      val fileSystem = new Path(dataPath).getFileSystem(sparkSession.sparkContext.hadoopConfiguration)
-      val geom = new GeometryFactory().toGeometry(mbr)
-      geom.setSRID(4326)
-      matchingRasterDirs.flatMap(matchingRasterDir =>
-        RasterFileRDD.selectFiles(fileSystem, matchingRasterDir, geom))
-    } else {
-      matchingRasterDirs
+    val finalResults: Array[ArrayBuffer[(String, Float)]] = new Array[ArrayBuffer[(String, Float)]](farmlands.length)
+      .map(_ => new ArrayBuffer[(String, Float)]())
+    val geoms: Array[Geometry] = farmlands.map(_.getGeometry)
+    for (matchingRasterDir <- matchingRasterDirs) {
+      val date = new Path(matchingRasterDir).getName
+      val matchingFiles = RasterFileRDD.selectFiles(fileSystem, matchingRasterDir, searchGeom)
+      if (matchingFiles.nonEmpty) {
+        // Use RaptorJoin to find the results
+        val rjResults = SingleMachineRaptorJoin.raptorJoin[Array[Int]](matchingFiles, geoms)
+        // Since we have one geometry, all the results are for a single geometry
+        val averages: Array[(Float, Int)] = Array.fill(geoms.length)((0.0f, 0))
+        val ndvis: Iterator[(Long, Float)] = rjResults
+          .filter(x => x._2(0) + x._2(3) > 0) // Drop records with a denominator of zero
+          .map(x => (x._1, (x._2(0).toFloat - x._2(3)) / (x._2(0).toFloat + x._2(3)))) // NDVI Equation
+        // Note that the RaptorJoin results are ordered by geometry ID
+        for (ndvi <- ndvis) {
+          val sumCount: (Float, Int) = averages(ndvi._1.toInt)
+          averages(ndvi._1.toInt) = (sumCount._1 + ndvi._2, sumCount._2 + 1)
+        }
+        for (iGeom <- averages.indices)
+          finalResults(iGeom).append((date, averages(iGeom)._1 / averages(iGeom)._2))
+      }
     }
-
-    logDebug(s"Query matched ${matchingRasterFiles.length} files")
-
-    // Load raster data// Load raster data
-    val finalResults = SingleMachineRaptorJoin.join(matchingRasterFiles, farmlands.map(_.getGeometry))
 
     // write results to json object// write results to json object
     val out = response.getWriter
@@ -231,8 +243,8 @@ class NDVIServlet extends AbstractWebHandler with Logging {
 
     // create query node// create query node
     val queryNode = mapper.createObjectNode
-    queryNode.put("soildepth", soilDepth)
-    queryNode.put("layer", layer)
+    queryNode.put("from", dateFrom)
+    queryNode.put("to", dateTo)
 
     // create mbr node// create mbr node
     // inside query node// inside query node
@@ -245,21 +257,23 @@ class NDVIServlet extends AbstractWebHandler with Logging {
       queryNode.set("mbr", mbrNode)
     }
 
-    // create results node// create results node
+    // create results node
     val resultsNode = mapper.createArrayNode
 
     // populate json object with max vals
     for (i <- finalResults.indices) {
-      val s = finalResults(i)
+      val s: ArrayBuffer[(String, Float)] = finalResults(i)
       if (s != null) {
         val resultNode = mapper.createObjectNode
         resultNode.put("objectid", farmlands(i).getAs("OBJECTID").asInstanceOf[Number].longValue)
-        resultNode.put("min", s.min)
-        resultNode.put("max", s.max)
-        resultNode.put("average", s.mean)
-        resultNode.put("count", s.count)
-        resultNode.put("stdev", s.stdev)
-        resultNode.put("median", s.median);
+        val ndvis = mapper.createArrayNode()
+        for ((date, ndvi) <- s) {
+          val ndviNode = mapper.createObjectNode()
+          ndviNode.put("date", date)
+          ndviNode.put("mean", ndvi)
+          ndvis.add(ndviNode)
+        }
+        resultNode.set("results", ndvis)
         resultsNode.add(resultNode)
       }
     }
@@ -273,7 +287,7 @@ class NDVIServlet extends AbstractWebHandler with Logging {
     // write values to response writer// write values to response writer
     val jsonString = mapper.writer.writeValueAsString(rootNode)
     out.print(jsonString)
-    out.flush()*/
+    out.flush()
     true
   }
 }
