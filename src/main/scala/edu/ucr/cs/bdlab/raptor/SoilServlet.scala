@@ -69,11 +69,6 @@ class SoilServlet extends AbstractWebHandler with Logging {
     response.setContentType("application/json")
     response.setStatus(HttpServletResponse.SC_OK)
 
-    // set Access-Control-Allow-Origin// set Access-Control-Allow-Origin
-    // otherwise, the front-end won't be able to make GET requests to this server// otherwise, the front-end won't be able to make GET requests to this server
-    // because of CORS policy// because of CORS policy
-    response.addHeader("Access-Control-Allow-Origin", "*")
-
     // load raster data based on selected soil depth and layer// load raster data based on selected soil depth and layer
     val matchingRasterDirs: Array[String] = rasterFiles
       .filter(rasterFile => SoilServlet.rangeOverlap(rasterFile._1, soilDepth))
@@ -147,10 +142,6 @@ class SoilServlet extends AbstractWebHandler with Logging {
 
     response.setContentType("application/json")
     response.setStatus(HttpServletResponse.SC_OK)
-
-    // set Access-Control-Allow-Origin
-    // otherwise, the front-end won't be able to make GET requests to this server because of CORS policy
-    response.addHeader("Access-Control-Allow-Origin", "*")
 
     // Load the Farmland features// Load the Farmland features
     val indexPath = new Path(VectorServlet.getIndexPathById(VectorServlet.VectorIndexFile, datasetID))

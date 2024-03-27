@@ -64,9 +64,6 @@ class VectorServlet extends AbstractWebHandler with Logging {
   @WebMethod(url = "/vectors.json", method = "GET")
   def listDatasets(path: String, request: HttpServletRequest, response: HttpServletResponse): Boolean = {
     response.setContentType("application/json")
-    // set Access-Control-Allow-Origin// set Access-Control-Allow-Origin
-    // otherwise, the front-end won't be able to make GET requests to this server because of CORS policy// otherwise, the front-end won't be able to make GET requests to this server because of CORS policy
-    response.addHeader("Access-Control-Allow-Origin", "*")
     if (!VectorIndexFile.exists) {
       response.setStatus(HttpServletResponse.SC_NOT_FOUND)
       val writer = response.getWriter
@@ -101,10 +98,6 @@ class VectorServlet extends AbstractWebHandler with Logging {
     // we set content-type as application/geo+json// we set content-type as application/geo+json
     // not application/json// not application/json
     response.setContentType("application/geo+json")
-
-    // set Access-Control-Allow-Origin// set Access-Control-Allow-Origin
-    // otherwise, the front-end won't be able to make GET requests to this server because of CORS policy// otherwise, the front-end won't be able to make GET requests to this server because of CORS policy
-    response.addHeader("Access-Control-Allow-Origin", "*")
 
     // Locate the index path// Locate the index path
     val dataIndexPath = getIndexPathById(VectorIndexFile, datasetID)
@@ -170,7 +163,6 @@ class VectorServlet extends AbstractWebHandler with Logging {
   @WebMethod(url = "/vectors/{datasetID}/tile-{z}-{x}-{y}.{ext}", method = "GET")
   def retrieveDataset(path: String, request: HttpServletRequest, response: HttpServletResponse,
                       datasetID: String, z: Int, x: Int, y: Int, ext: String): Boolean = {
-    response.addHeader("Access-Control-Allow-Origin", "*")
     val vizPath = getVizPathById(VectorIndexFile, datasetID)
     if (vizPath == null) {
       response.setStatus(HttpServletResponse.SC_NOT_FOUND)
