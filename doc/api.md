@@ -1,7 +1,9 @@
 # FutureFarmNow API Documentation
-Version: 0.2-RC1
+Version: 0.3-RC1
 
-All the following end-points are hosted under the URL `https://raptor.cs.ucr.edu/futurefarmnow-backend-<VERSION>`. The current version is shown at the top of this document. All the following endpoints should be preceded with the base URL given above.
+All the following end-points are hosted under the URL `https://raptor.cs.ucr.edu/futurefarmnow-backend-<VERSION>`.
+The current version is shown at the top of this document.
+All the following endpoints should be preceded with the base URL given above.
 
 ## List vector products
 Lists all the vector datasets available on the server.
@@ -182,9 +184,10 @@ Currently, the accepted values for from and to are {0, 5, 15, 30, 60, 100, 200} 
 Get NDVI time series for a single geometry defined by GeoJSON. The output is in JSON format.
 
 | Endpoint     | `/ndvi/singlepolygon.json` |
-|--------------|-------------------------|
-| HTTP method  | GET/POST                |
-| POST payload | GeoJSON geometry object |
+|--------------|----------------------------|
+| HTTP method  | GET/POST                   |
+| POST payload | GeoJSON geometry object    |
+| since        | 0.3                        |
 
 | Parameter | Required? | How to use       | Description              |
 |-----------|-----------|------------------|--------------------------|
@@ -193,7 +196,7 @@ Get NDVI time series for a single geometry defined by GeoJSON. The output is in 
 
 ### Examples
 #### URL
-<https://raptor.cs.ucr.edu/futurefarmnow-backend-0.2-RC1/ndvi/singlepolygon.json?from=2023-09-25&to=2023-09-30>
+<https://raptor.cs.ucr.edu/futurefarmnow-backend-0.3-RC1/ndvi/singlepolygon.json?from=2023-09-25&to=2023-09-30>
 
 #### GET/POST payload
 ```json
@@ -205,7 +208,7 @@ Get NDVI time series for a single geometry defined by GeoJSON. The output is in 
 cat > test.geojson
 {"type" : "Polygon",  "coordinates" : [ [ [ -120.11975251694177, 36.90564006418889 ], [ -120.12409234994458, 36.90565751854381 ], [ -120.12406217104261, 36.90824957916899 ], [ -120.12410082465097, 36.90918197014845 ], [ -120.12405123315573, 36.90918899854245 ], [ -120.11874725371255, 36.9091820470047 ], [ -120.11975251694177, 36.90564006418889 ] ] ]  }
 ^D
-curl -X GET "http://raptor.cs.ucr.edu/futurefarmnow-backend-0.2-RC1/ndvi/singlepolygon.json?from=2023-09-25&to=2023-09-30" -H "Content-Type: application/geo+json" -d @test.geojson
+curl -X GET "http://raptor.cs.ucr.edu/futurefarmnow-backend-0.3-RC1/ndvi/singlepolygon.json?from=2023-09-25&to=2023-09-30" -H "Content-Type: application/geo+json" -d @test.geojson
 ```
 
 #### Response
@@ -227,6 +230,7 @@ Get NDVI time series for selected vector products in JSON format
 | Endpoint    | `/ndvi/<id>.json` |
 |-------------|-------------------|
 | HTTP method | GET               |
+| since       | 0.3               | 
 
 | Parameter | Required? | How to use       | Description                  |
 |-----------|-----------|------------------|------------------------------|
@@ -242,7 +246,7 @@ The result is an array of (date, ndvi) values for each object. Notice that some 
 The result contains only the defined values.
 ### Examples
 #### URL
-<http://raptor.cs.ucr.edu/futurefarmnow-backend-0.2-RC1/ndvi/AZ_Farmland.json?minx=-114.7&miny=32.5&maxx=-114.64&maxy=32.55267&from=2023-09-25&to=2023-09-30>
+<http://raptor.cs.ucr.edu/futurefarmnow-backend-0.3-RC1/ndvi/AZ_Farmland.json?minx=-114.7&miny=32.5&maxx=-114.64&maxy=32.55267&from=2023-09-25&to=2023-09-30>
 
 #### Response
 ```json
@@ -259,7 +263,7 @@ The result contains only the defined values.
   },
   "results":[{
     "objectid":"41176",
-    "values": [
+    "results": [
       {"date":  "2023-09-25", "mean": 0.8},
       {"date":  "2023-09-27", "mean": 0.3},
       ...
