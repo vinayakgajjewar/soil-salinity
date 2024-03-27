@@ -79,6 +79,15 @@ object SingleMachineRaptorJoin {
     if (values == null) null else processIterator(values).toArray
   }
 
+  /**
+   * Runs a RaptorJoin operation on single thread between the given list of files and the geometry array.
+   * The result is an iterator over pairs of (geometryID, Pixel Value). The geometry ID is the index of the
+   * geometry in the given array.
+   * @param rasterFileNames
+   * @param geomArray
+   * @tparam T
+   * @return
+   */
   def raptorJoin[T](rasterFileNames: Array[String], geomArray: Array[Geometry]): Iterator[(Long, T)] = {
     val intersections: Array[(Int, Intersections)] = rasterFileNames.zipWithIndex.map({ case (rasterFileName: String, index: Int) =>
       val rasterFS: FileSystem = new Path(rasterFileName).getFileSystem(new Configuration())
