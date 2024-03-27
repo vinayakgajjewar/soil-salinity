@@ -1,9 +1,10 @@
 package edu.ucr.cs.bdlab.raptor
 
+import com.fasterxml.jackson.core.JsonFactory
 import com.fasterxml.jackson.databind.ObjectMapper
 import edu.ucr.cs.bdlab.beast.common.{BeastOptions, WebMethod}
 import edu.ucr.cs.bdlab.beast.indexing.RTreeFeatureReader
-import edu.ucr.cs.bdlab.beast.io.SpatialFileRDD
+import edu.ucr.cs.bdlab.beast.io.{GeoJSONFeatureReader, SpatialFileRDD}
 import edu.ucr.cs.bdlab.beast.util.AbstractWebHandler
 import org.apache.commons.io.IOUtils
 import org.apache.hadoop.fs.Path
@@ -12,9 +13,8 @@ import org.apache.spark.internal.Logging
 import org.apache.spark.sql.SparkSession
 import org.locationtech.jts.geom.{Envelope, Geometry, GeometryFactory}
 import org.locationtech.jts.io.ParseException
-import org.locationtech.jts.io.geojson.GeoJsonReader
 
-import java.io.ByteArrayOutputStream
+import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
 import javax.servlet.http.{HttpServletRequest, HttpServletResponse}
 import scala.collection.JavaConverters.asScalaIteratorConverter
 import scala.collection.mutable.ArrayBuffer
@@ -92,19 +92,17 @@ class NDVIServlet extends AbstractWebHandler with Logging {
     IOUtils.copy(input, baos)
     input.close()
     baos.close()
-
-    // initialize GeoJSON reader to parse the query geometry
-    val reader = new GeoJsonReader(new GeometryFactory)
-
-    // try reading the geojson string into a geometry object// try reading the geojson string into a geometry object
+    val geoJSONData: Array[Byte] = baos.toByteArray
     var geom: Geometry = null
-    val geometryGeoJSON = baos.toString
     try {
-      geom = reader.read(geometryGeoJSON)
+      val jsonParser = new JsonFactory().createParser(new ByteArrayInputStream(geoJSONData))
+      geom = GeoJSONFeatureReader.parseGeometry(jsonParser)
       geom.setSRID(4326)
+      jsonParser.close()
     } catch {
-      case e: ParseException =>
-        logError(s"Could not parse GeoJSON string $geometryGeoJSON", e)
+      case e: Exception =>
+        logError(s"Error parsing GeoJSON geometry ${new String(geoJSONData)}", e)
+        throw new RuntimeException(s"Error parsing query geometry ${new String(geoJSONData)}", e)
     }
 
     // Now that we have the query geometry, loop over al matching directories and run the NDVI query

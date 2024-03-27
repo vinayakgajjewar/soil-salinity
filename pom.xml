@@ -16,39 +16,13 @@
         <mongodb-driver-sync.version>4.3.2</mongodb-driver-sync.version>
     </properties>
     <dependencies>
-        <dependency>
-            <groupId>org.json</groupId>
-            <artifactId>json</artifactId>
-            <version>20180130</version>
-        </dependency>
-        <dependency>
-            <groupId>org.mongodb</groupId>
-            <artifactId>mongodb-driver-sync</artifactId>
-            <version>${mongodb-driver-sync.version}</version>
-        </dependency>
         <!-- https://mvnrepository.com/artifact/edu.ucr.cs.bdlab/beast -->
         <dependency>
             <groupId>edu.ucr.cs.bdlab</groupId>
             <artifactId>beast-spark</artifactId>
             <version>0.10.1-SNAPSHOT</version>
         </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-            <version>2.14.2</version>
-        </dependency>
-        <dependency>
-            <groupId>org.locationtech.jts</groupId>
-            <artifactId>jts-core</artifactId>
-            <version>1.18.1</version>
-        </dependency>
-        <!-- https://mvnrepository.com/artifact/org.locationtech.jts.io/jts-io-common -->
-        <dependency>
-            <groupId>org.locationtech.jts.io</groupId>
-            <artifactId>jts-io-common</artifactId>
-            <version>1.18.2</version>
-        </dependency>
-        <dependency>
+         <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>javax.servlet-api</artifactId>
             <version>3.1.0</version>
@@ -57,20 +31,6 @@
     </dependencies>
     <build>
         <plugins>
-            <plugin>
-                <groupId>org.eclipse.jetty</groupId>
-                <artifactId>jetty-maven-plugin</artifactId>
-                <version>${jettyVersion}</version>
-                <configuration>
-                    <verbose>true</verbose>
-                    <fork>true</fork>
-                    <executable>/usr/bin/javac</executable>
-                    <compilerVersion>1.8</compilerVersion>
-                    <!--https://maven.apache.org/plugins/maven-compiler-plugin/examples/set-compiler-source-and-target.html-->
-                    <source>1.8</source>
-                    <target>1.8</target>
-                </configuration>
-            </plugin>
             <!--scala integration-->
             <plugin>
                 <groupId>net.alchim31.maven</groupId>

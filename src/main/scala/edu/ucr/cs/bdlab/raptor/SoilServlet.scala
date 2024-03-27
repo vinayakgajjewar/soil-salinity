@@ -1,9 +1,10 @@
 package edu.ucr.cs.bdlab.raptor
 
+import com.fasterxml.jackson.core.JsonFactory
 import com.fasterxml.jackson.databind.ObjectMapper
 import edu.ucr.cs.bdlab.beast.common.{BeastOptions, WebMethod}
 import edu.ucr.cs.bdlab.beast.indexing.RTreeFeatureReader
-import edu.ucr.cs.bdlab.beast.io.SpatialFileRDD
+import edu.ucr.cs.bdlab.beast.io.{GeoJSONFeatureReader, SpatialFileRDD}
 import edu.ucr.cs.bdlab.beast.util.AbstractWebHandler
 import org.apache.commons.io.IOUtils
 import org.apache.hadoop.fs.Path
@@ -11,10 +12,8 @@ import org.apache.hadoop.mapreduce.lib.input.FileSplit
 import org.apache.spark.internal.Logging
 import org.apache.spark.sql.SparkSession
 import org.locationtech.jts.geom.{Envelope, Geometry, GeometryFactory}
-import org.locationtech.jts.io.ParseException
-import org.locationtech.jts.io.geojson.GeoJsonReader
 
-import java.io.ByteArrayOutputStream
+import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
 import javax.servlet.http.{HttpServletRequest, HttpServletResponse}
 import scala.collection.JavaConverters.asScalaIteratorConverter
 
@@ -86,35 +85,31 @@ class SoilServlet extends AbstractWebHandler with Logging {
     IOUtils.copy(input, baos)
     input.close()
     baos.close()
-
-    // initialize geojson reader to parse the query geometry
-    val reader = new GeoJsonReader(new GeometryFactory)
-
-    // try reading the geojson string into a geometry object// try reading the geojson string into a geometry object
+    val geoJSONData: Array[Byte] = baos.toByteArray
     var geom: Geometry = null
-    val geometryGeoJSON = baos.toString
     try {
-      geom = reader.read(geometryGeoJSON)
+      val jsonParser = new JsonFactory().createParser(new ByteArrayInputStream(geoJSONData))
+      geom = GeoJSONFeatureReader.parseGeometry(jsonParser)
       geom.setSRID(4326)
+      jsonParser.close()
     } catch {
-      case e: ParseException =>
-        System.err.println("----ERROR: could not parse geojson string " + geometryGeoJSON)
-        e.printStackTrace()
+      case e: Exception =>
+        logError(s"Error parsing GeoJSON geometry ${new String(geoJSONData)}", e)
+        throw new RuntimeException(s"Error parsing query geometry ${new String(geoJSONData)}", e)
     }
 
-    // now that we have a geometry object
-    // call single machine raptor join
+    // Now that we have a geometry object, call single machine raptor join
     val fileSystem = new Path(dataPath).getFileSystem(sparkSession.sparkContext.hadoopConfiguration)
     val matchingFiles = matchingRasterDirs.flatMap(matchingRasterDir =>
       RasterFileRDD.selectFiles(fileSystem, matchingRasterDir, geom))
     logDebug(s"Query matched ${matchingFiles.length} files")
     val singleMachineResults: SingleMachineRaptorJoin.Statistics = SingleMachineRaptorJoin.zonalStatistics(matchingFiles, Array(geom))(0)
 
-    // write result to json object// write result to json object
+    // Write result to json object
     val resWriter = response.getWriter
     val mapper = new ObjectMapper
 
-    // create query node// create query node
+    // Create query node
     val queryNode = mapper.createObjectNode
     queryNode.put("soildepth", soilDepth)
     queryNode.put("layer", layer)
